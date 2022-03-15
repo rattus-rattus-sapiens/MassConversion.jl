@@ -3,6 +3,9 @@ uuid = "2e54bf2d-ba46-4dd2-9ac8-948a8ef92836"
 authors = ["Joshua C. Kynaston <josh.c.kynaston@gmail.com> and contributors"]
 version = "0.1.0"
 
+[deps]
+OrderedCollections = "bac558e1-5e72-5ebc-8fee-abe8a469f55d"
+
 [compat]
 julia = "1"
 

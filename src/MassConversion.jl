@@ -1,5 +1,5 @@
 module MassConversion
 
-# Write your package code here.
+include("model_setup.jl")
 
 end
