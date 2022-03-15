@@ -1,0 +1,13 @@
+name = "MassConversion"
+uuid = "2e54bf2d-ba46-4dd2-9ac8-948a8ef92836"
+authors = ["Joshua C. Kynaston <josh.c.kynaston@gmail.com> and contributors"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
