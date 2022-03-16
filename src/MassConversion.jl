@@ -1,5 +1,5 @@
 module MassConversion
 
-include("model_setup.jl")
+include("mcm_functions.jl")
 
 end
