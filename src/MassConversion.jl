@@ -1,13 +1,8 @@
 module MassConversion
 
-#using OrderedCollections
-
+include("data_structures.jl")
 include("mcm_functions.jl")
-#include("model_setup.jl")
 
-export run_mcm
-
-#export Model, Species, Reaction
-#export get_init
+export run_mcm, run_ssa
 
 end
