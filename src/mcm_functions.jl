@@ -1,4 +1,27 @@
 """
+    sample_dist(a::Union{AbstractArray{T}, Tuple{Vararg{T}}}, a₀::T) where T <: Real
+
+Samples from an unnormalised discrete distribution.
+
+### Arguments
+- `a`: Array/Tuple of weights
+- `a₀`: Sum of weights
+"""
+function sample_dist(a::Union{AbstractArray{T},Tuple{Vararg{T}}}, a₀::T) where {T<:Real}
+
+    i = 1
+    cumsum = a[1]
+    r = rand()
+
+    while cumsum < r * a₀
+        i += 1
+        cumsum += a[i]
+    end
+
+    return i
+end
+
+"""
     run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
 """
 function run_mcm(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, F!::Function, A!::Function, rn::Int64)
