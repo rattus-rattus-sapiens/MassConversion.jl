@@ -1,5 +1,5 @@
 struct SSAOutput
-    trajectories_raw::Array
+    trajectories_discrete::Array
     mean_total::Array
     var_total::Array
     function SSAOutput(t::Array{T, 3}) where T <: Real
@@ -17,6 +17,7 @@ struct MCMOutput
     mean_total::Array
     var_total::Array
     function MCMOutput(t::Array{T, 3}) where T <: Real
+        if size(t, 1)/2 ≠ floor(size(t, 1)/2) throw(ArgumentError("inital condition must be 2* number of species")) end
         ns::Int64 = size(t, 1)/2;
         t1 = t[1:ns, :, :]
         t2 = t[ns+1:end, :, :]
