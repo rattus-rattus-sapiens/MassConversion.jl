@@ -3,4 +3,5 @@ This package provides an implementation of the Mass Conversion hybrid method for
 
 ```@docs
 run_mcm()
+run_ssa()
 ```

@@ -74,7 +74,7 @@ function run_mcm(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, F!
         rec[:, end, ri] .= state
     end
 
-    return rec
+    return MCMOutput(rec)
 end
 
 """
@@ -136,5 +136,5 @@ function rec_ssa(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, A!
         rec[:, end, ri] .= state
     end
 
-    return rec
+    return SSAOutput(rec) 
 end

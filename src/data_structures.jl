@@ -1,36 +1,30 @@
-struct SSAOutput{T}
-    trajectories_raw::Array{T, 3}
-    mean_total::Array{T, 2}
-    var_total::Array{T, 2}
-    t_span::Vector{Float64}
-    function SSAOutput{T}(ns::Int64, nt::Int64, nr::Int64) where T <: Real
-        new(
-            Array{T, 3}(undef, (ns, nt, nr)), 
-            Array{T, 2}(undef, (ns, nt)),
-            Array{T, 2}(undef, (ns, nt)), 
-            zeros(Float64, nr)
-        )
+struct SSAOutput
+    trajectories_raw::Array
+    mean_total::Array
+    var_total::Array
+    function SSAOutput(t::Array{T, 3}) where T <: Real
+        mn = calc_mean(t)
+        vr = calc_var(t, mn)
+        new(t, mn, vr)
     end
 end
 
-struct MCMOutput{T}
-    trajectories_discrete::Array{T, 3}
-    trajectories_continuum::Array{T, 3}
-    mean_discrete::Array{T, 2}
-    mean_continuum::Array{T, 2}
-    mean_total::Array{T, 2}
-    var_total::Array{T, 2}
-    t_span::Vector{Float64}
-    function MCMOutput{T}(ns::Int64, nt::Int64, nr::Int64) where T <: Real
-        new(
-            Array{T, 3}(undef, (ns, nt, nr)),
-            Array{T, 3}(undef, (ns, nt, nr)),
-            Array{T, 2}(undef, (ns, nt)),
-            Array{T, 2}(undef, (ns, nt)),
-            Array{T, 2}(undef, (ns, nt)),
-            Array{T, 2}(undef, (ns, nt)),
-            zeros(Float64, nr)
-        )
+struct MCMOutput
+    trajectories_discrete::Array
+    trajectories_continuum::Array
+    mean_discrete::Array
+    mean_continuum::Array
+    mean_total::Array
+    var_total::Array
+    function MCMOutput(t::Array{T, 3}) where T <: Real
+        ns::Int64 = size(t, 1)/2;
+        t1 = t[1:ns, :, :]
+        t2 = t[ns+1:end, :, :]
+        mn1 = calc_mean(t1)
+        mn2 = calc_mean(t2)
+        mn3 = calc_mean_total(mn1, mn2)
+        vr1 = calc_var(t1 .+ t2, mn3)
+        new(t1, t2, mn1, mn2, mn3, vr1)
     end
 end
 
@@ -49,14 +43,14 @@ function calc_mean_total(mn1::Array{T, 2}, mn2::Array{T, 2}) where T <: Real
     for i=1:ns
         @. mnt[i, :] = mn1[i, :] + mn2[i, :]
     end
-    mn ./= 2
+    mnt ./= 2
 end
 
 function calc_var(t::Array{T, 3}, mn::Array{T, 2}) where T <: Real
     ns, nt, nr = size(t)
-    var = Array{T, 2}(0, (ns, nt))
-    for j=1:ns, i=1:nt
-        @. var[i, j] += (mn[i, j] - t[i, j, :])^2
+    var = zeros(T, ns, nt)
+    for i=1:ns, j=1:nt, k=1:nr 
+        var[i, j] += (mn[i, j] - t[i, j, k])^2
     end
     var ./= nr - 1
 end
