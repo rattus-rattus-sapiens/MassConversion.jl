@@ -1,7 +1,7 @@
 name = "MassConversion"
 uuid = "2e54bf2d-ba46-4dd2-9ac8-948a8ef92836"
 authors = ["Joshua C. Kynaston <josh.c.kynaston@gmail.com> and contributors"]
-version = "0.5.2"
+version = "0.5.3"
 
 [deps]
 DocumenterTools = "35a29f4d-8980-5a13-9543-d66fff28ecb8"
@@ -9,6 +9,7 @@ Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
 
 [compat]
 Revise = "3"
+DocumenterTools = "0.1"
 julia = "1"
 
 [extras]

@@ -2,10 +2,11 @@ struct SSAOutput
     trajectories_raw::Array
     mean_total::Array
     var_total::Array
-    function SSAOutput(t::Array{T, 3}) where T <: Real
+    reac_count::Vector{Int64}
+    function SSAOutput(t::Array{T, 3}, r::Vector{Int64}) where T <: Real
         mn = calc_mean(t)
         vr = calc_var(t, mn)
-        new(t, mn, vr)
+        new(t, mn, vr, r)
     end
 end
 
