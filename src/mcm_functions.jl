@@ -80,7 +80,7 @@ end
 """
     record_state!()
 """
-function record_state!(rec::Array{T}, t::Float64, tn::Int64, tp::Array{Int64}, Δt::Float64, state::Array{T}, repi::Int64) where {T<:Real}
+function record_state!(rec::Array, t::Float64, tn::Int64, tp::Array{Int64}, Δt::Float64, state::Array, repi::Int64)
     if t > tp[1] * Δt
         _tc::Int64 = min(tn, floor(t / Δt) + 1)
         for i ∈ 1:length(state)
@@ -96,7 +96,7 @@ end
 """
     run_ssa(tf, dt, IC, λ, R, A!, rn)
 """
-function rec_ssa(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, A!::Function, rn::Int64)
+function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Function, rn::Int64) where {T<:Real}
 
     # Get timesteps etc
     tn = floor(Int64, tf / dt) + 1
@@ -107,13 +107,13 @@ function rec_ssa(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, A!
     state = similar(IC)
     α = zeros(size(R, 2))
     dxdt = zeros(K)
+    reac_count = zeros(Int64, size(R, 2))
 
     for ri ∈ 1:rn
         # Initial conditions
         t = 0.0
-        tp = 1
+        tp = [1]
         state .= IC
-        rec[:, ti, ri] .= state
 
         while t < tf
             # Update propensity functions
@@ -127,6 +127,7 @@ function rec_ssa(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, A!
             t += τ
             reaci = sample_dist(α, α₀)
             for i ∈ 1:K state[i] += R[i, reaci] end
+            reac_count[reaci] += 1
              
             # Record
             record_state!(rec, t, tn, tp, dt, state, ri)
@@ -136,5 +137,5 @@ function rec_ssa(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, A!
         rec[:, end, ri] .= state
     end
 
-    return SSAOutput(rec) 
+    return SSAOutput(rec, reac_count) 
 end
