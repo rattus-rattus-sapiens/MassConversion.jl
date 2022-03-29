@@ -24,7 +24,7 @@ end
 """
     run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
 """
-function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, F!::Function, A!::Function, rn::Int64) where T <: Real
+function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, nr::Int64, R!::Function, F!::Function, A!::Function, rn::Int64) where T <: Real
 
     # Match type
     if typeof(IC) <: Vector{T} where T <: Real 
@@ -38,7 +38,7 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, F!::Func
     # Preallocation
     rec = zeros(K, tn, rn)
     state = similar(IC)
-    α = zeros(size(R, 2))
+    α = zeros(nr)
     dxdt = zeros(K)
 
     for ri ∈ 1:rn
@@ -61,16 +61,16 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, F!::Func
                 # Execute stochastic event
                 t += τ
                 reaci = sample_dist(α, α₀)
-                for i ∈ 1:K state[i] += R[i, reaci] end
+                R!(state, reaci)
             else
                 # Execute ODE update
                 F!(dxdt, state, t, λ)
                 @. state += dt * dxdt
 
                 # Record
-                t = (ti - 1) * dt
-                rec[:, ti, ri] .= state
                 ti += 1
+                rec[:, ti, ri] .= state
+                t = (ti - 1) * dt
                 td = ti * dt
             end
         end
