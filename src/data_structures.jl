@@ -30,6 +30,30 @@ struct MCMOutput
     end
 end
 
+struct Interval
+    lefts::Array
+    rights::Array
+    function Interval(int::Vector{T}) where T <: Real
+        lefts = [int[1]]
+        rights = [int[2]]
+        new(lefts,rights)
+    end
+end
+
+function in(num::T, int::Interval) where T <: Real
+    for i in 1:length(int.lefts)
+        if int.lefts[i] <= num <= int.rights[i]
+            return true
+            break
+        end
+    end
+    return false
+end
+
+function union(i1::Interval, i2::Interval)
+    
+end
+
 function calc_mean(t::Array{T, 3}) where T <: Real
     ns, nt, nr = size(t)
     mn = Array{T, 2}(undef, (ns, nt))

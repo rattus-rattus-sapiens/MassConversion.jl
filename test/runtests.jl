@@ -32,6 +32,11 @@ using Test
         @test all(model.mean_discrete .== 1.0)
         @test all(model.mean_total .== 2.0)
     end
+
+    @testset "Interval tests" begin
+        int1 = Interval([4,6])
+        @test 5 ∈ int1
+    end
 end
 
 #   @testset "Model setup tests" begin
