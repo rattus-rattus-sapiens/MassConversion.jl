@@ -24,7 +24,12 @@ end
 """
     run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
 """
-function run_mcm(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, F!::Function, A!::Function, rn::Int64)
+function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, F!::Function, A!::Function, rn::Int64) where T <: Real
+
+    # Match type
+    if typeof(IC) <: Vector{T} where T <: Real 
+        IC = Vector{Float64}(IC)
+    end
 
     # Get timesteps etc
     tn = floor(Int64, tf / dt) + 1
@@ -46,7 +51,7 @@ function run_mcm(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, F!
 
         while t < tf
             # Update propensity functions
-            A!(α, state, λ)
+            A!(α, state, t, λ)
             α₀ = sum(α)
 
             # Time to next reaction
@@ -59,7 +64,7 @@ function run_mcm(tf, dt, IC::Vector{Float64}, λ::Vector{Float64}, R::Matrix, F!
                 for i ∈ 1:K state[i] += R[i, reaci] end
             else
                 # Execute ODE update
-                F!(dxdt, state, λ)
+                F!(dxdt, state, t, λ)
                 @. state += dt * dxdt
 
                 # Record
