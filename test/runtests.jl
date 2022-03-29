@@ -34,8 +34,17 @@ using Test
     end
 
     @testset "Interval tests" begin
-        int1 = Interval([4,6])
-        @test 5 ∈ int1
+        int1 = Interval([1,2])
+        int2 = Interval([0.5,2.5])
+        int3 = Interval([0, 1.5])
+        int4 = Interval([1.5, 2.5])
+        int5 = Interval([1.1, 1.9])
+        int6 = Interval([4, 5])
+        @test 1.5 ∈ int1
+        @test 3 ∉ int1
+        uint1 = int1 ∪ int2
+        @test 0.8 ∈ uint1
+        @test 0 ∉ uint1
     end
 end
 
