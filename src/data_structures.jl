@@ -25,7 +25,7 @@ struct MCMOutput
         mn2 = calc_mean(t2)
         mn3 = calc_mean_total(mn1, mn2)
         vr1 = calc_var(t1 .+ t2, mn3)
-        new(t1, t2, mn1, mn2, mn3, vr1)
+        new(t1, t2, mn1', mn2', mn3', vr1')
     end
 end
 
@@ -44,7 +44,7 @@ function calc_mean_total(mn1::Array{T, 2}, mn2::Array{T, 2}) where T <: Real
     for i=1:ns
         @. mnt[i, :] = mn1[i, :] + mn2[i, :]
     end
-    mnt ./= 2
+    return mnt
 end
 
 function calc_var(t::Array{T, 3}, mn::Array{T, 2}) where T <: Real
