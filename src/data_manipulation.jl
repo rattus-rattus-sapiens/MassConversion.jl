@@ -15,3 +15,7 @@ function calc_var(t::Array{T, 3}, mn::Array{T, 2}) where T <: Real
     end
     var ./= nr - 1
 end
+
+function to_dict(dat::O) where O <: Output
+    return Dict(key=>getfield(dat, key) for key ∈ fieldnames(O))
+end

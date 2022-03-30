@@ -3,11 +3,12 @@ abstract type Output end
 struct SSAOutput <: Output
     trajectories_discrete::Array
     function SSAOutput(t::Array{T, 3}) where T <: Real
+        t = permutedims(t, [2, 1, 3])
         new(t)
     end
 end
 
-struct MCMOutput <: Output
+@with_kw struct MCMOutput <: Output
     trajectories_discrete::Array
     trajectories_continuum::Array
     tf::Float64
