@@ -23,25 +23,36 @@ end
 
 """
     run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
+
+Run the mass-conversion method.
+
+### Arguments
+- `tf` : Simulation run time
+- `dt` : Time step
+- `IC` : Vector containing initial condition
+- `λ` : Vector containing rate parameters. The last K parameters, where K is the number of species, is assumed to be the regime transition rate.
+- `R` : Stoichiometric matrix representing all non-transitional reactions
+- `θ` : Vector containing tuples representing the lower and upper thresholds, respectively
+- `F!` : Function for computing dxdt for the forward Euler method
+- `A!` : Function for computing propensity functions for all non-transitional reactions
+- `rn` : Number of repeats
 """
-function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, reacn::Int64, R!::Function, F!::Function, A!::Function, repn::Int64) where T <: Real
+function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, F!::Function, A!::Function, rn::Int64) where T <: Real
 
     # Match type
-    if typeof(IC) <: Vector{T} where T <: Real 
-        IC = Vector{Float64}(IC)
-    end
+    IC = Vector{Float64}(IC)
 
     # Get timesteps etc
     tn = floor(Int64, tf / dt) + 1
     K = length(IC)
 
     # Preallocation
-    rec = zeros(K, tn, repn)
+    rec = zeros(K, tn, rn)
     state = similar(IC)
     α = zeros(reacn)
     dxdt = zeros(K)
 
-    for ri ∈ 1:repn
+    for ri ∈ 1:rn
         # Initial conditions
         t = 0.0
         td = dt
@@ -80,7 +91,7 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, reacn::Int64, R!::F
     end
 
     # Create dictionary for storing parameter values
-    dict = Dict("tf" => tf, "dt" => dt, "IC" => IC, "λ" => λ, "reacn" => reacn, "repn" => repn)
+    dict = Dict("tf" => tf, "dt" => dt, "IC" => IC, "λ" => λ, "rn" => rn)
 
     return MCMOutput(rec, dict)
 end
