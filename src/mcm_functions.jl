@@ -135,10 +135,7 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
         rec[:, end, ri] .= state
     end
 
-    # Create dictionary for storing parameter values
-    dict = Dict("tf" => tf, "dt" => dt, "IC" => IC, "λ" => λ, "rn" => rn)
-
-    return MCMOutput(rec, dict)
+    return MCMOutput(t::Array{T,3}, tf, dt, IC, λ, R, θ, rn)
 end
 
 """
