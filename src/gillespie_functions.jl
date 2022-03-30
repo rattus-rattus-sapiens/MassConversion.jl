@@ -59,5 +59,5 @@ function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Func
         rec[:, end, ri] .= state
     end
 
-    return SSAOutput(rec)
+    return SSAOutput(rec, tf, dt, IC, λ, R, rn)
 end
