@@ -39,13 +39,17 @@ Run the mass-conversion method.
 """
 function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vector{Tuple}, F!::Function, A!::Function, rn::Int64) where T <: Real
 
-    # Match type
+    # Input validation
+    if length(IC)/2 ≠ floor(length(IC)/2) throw("even number of input species expected") end
+    if size(R, 1) ≠ length(IC) throw("ill-defined stoichimetric matrix") end
+
+    # Input sanitisation
     IC = Vector{Float64}(IC)
 
-    # Get timesteps etc
-    tn = floor(Int64, tf / dt) + 1
-    Kn = floor(Int64, length(IC)/2) # Number of unique species
-    Rn = size(R, 2) # Number of non-transitional reactions
+    # Get constants
+    const tn = floor(Int64, tf / dt) + 1
+    const Kn = floor(Int64, length(IC)/2) # Number of unique species
+    const Rn = size(R, 2) # Number of non-transitional reactions
 
     # Preallocation
     rec = zeros(2 * Kn, tn, rn)
