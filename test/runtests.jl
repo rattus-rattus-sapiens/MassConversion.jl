@@ -5,6 +5,7 @@ using Test
     # Write your tests here.
 
     @testset "Data Structure Tests" begin
+        # TODO: Write variance test
         traj1 = ones(10, 1000, 250)
 
         model = MassConversion.MCMOutput(traj1, 10.0, 0.1, [1.0, 1.0], [0.0], rand(Int64, 2, 2), [(0,0)], 100)
