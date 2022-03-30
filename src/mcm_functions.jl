@@ -100,17 +100,6 @@ function run_mcm(
     α = zeros(Rn + 2 * Kn)
     dxdt = zeros(2 * Kn)
 
-    # Add transitional reactions to stoichiometry matrix
-    for i in 1 : Kn
-        j = 2*(i-1) + 1 
-        _v = zeros(2*Kn)
-        _v[j] = 1
-        _v[j+1] = -1
-        R = hcat(R, _v)
-        _v *= -1
-        R = hcat(R, _v)
-    end
-
     # Propensity function for transitional reactions
     enumθ = enumerate(θ)
 
@@ -189,7 +178,6 @@ function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Func
     rec = zeros(K, tn, rn)
     state = similar(IC)
     α = zeros(size(R, 2))
-    dxdt = zeros(K)
     reac_count = zeros(Int64, size(R, 2))
 
     for ri ∈ 1:rn
@@ -209,9 +197,11 @@ function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Func
             # Execute stochastic event
             t += τ
             reaci = sample_dist(α, α₀)
-            for i ∈ 1:K state[i] += R[i, reaci] end
+            for i ∈ 1:K
+                state[i] += R[i, reaci]
+            end
             reac_count[reaci] += 1
-             
+
             # Record
             record_state!(rec, t, tn, tp, dt, state, ri)
         end
@@ -220,5 +210,5 @@ function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Func
         rec[:, end, ri] .= state
     end
 
-    return SSAOutput(rec, reac_count) 
+    return SSAOutput(rec)
 end
