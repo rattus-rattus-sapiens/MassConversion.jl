@@ -24,7 +24,7 @@ end
 """
     run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
 """
-function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, nr::Int64, R!::Function, F!::Function, A!::Function, rn::Int64) where T <: Real
+function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, reacn::Int64, R!::Function, F!::Function, A!::Function, repn::Int64) where T <: Real
 
     # Match type
     if typeof(IC) <: Vector{T} where T <: Real 
@@ -36,12 +36,12 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, nr::Int64, R!::Func
     K = length(IC)
 
     # Preallocation
-    rec = zeros(K, tn, rn)
+    rec = zeros(K, tn, repn)
     state = similar(IC)
-    α = zeros(nr)
+    α = zeros(reacn)
     dxdt = zeros(K)
 
-    for ri ∈ 1:rn
+    for ri ∈ 1:repn
         # Initial conditions
         t = 0.0
         td = dt
@@ -79,7 +79,10 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, nr::Int64, R!::Func
         rec[:, end, ri] .= state
     end
 
-    return MCMOutput(rec)
+    # Create dictionary for storing parameter values
+    dict = Dict("tf" => tf, "dt" => dt, "IC" => IC, "λ" => λ, "reacn" => reacn, "repn" => repn)
+
+    return MCMOutput(rec, dict)
 end
 
 """

@@ -15,15 +15,3 @@ function calc_var(t::Array{T, 3}, mn::Array{T, 2}) where T <: Real
     end
     var ./= nr - 1
 end
-
-function save_data(dat::Output, type::String)
-    datestring = string(ceil(now(), Dates.Second(0)))
-    filestring = "examples/dat/" * type * "-" * datestring * ".jld2"
-    serialize(filestring, dat)
-    println("Data saved as " * filestring)
-    return nothing
-end
-
-function load_data(str::String)
-    rec = FileIO.load()
-end

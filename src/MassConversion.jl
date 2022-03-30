@@ -2,7 +2,7 @@ module MassConversion
 import Base.in
 import Base.union
 import Base.iterate
-using Serialize
+using JLD2
 using Dates
 using Plots
 
