@@ -1,8 +1,6 @@
 using Revise
 using MassConversion
 using Plots
-using Dates
-using FileIO, JLD2
 
 const tf = 90
 const dt = 1e-2
@@ -45,10 +43,6 @@ end
 const rn = 1000
 
 rec = run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
-
-# * Save experimental data
-datestring = string(ceil(now(), Dates.Second(1)))
-FileIO.save("examples/dat/alt-log-"*datestring*".jld2", "rec", rec)
 
 tspan = 0:dt:tf
 
