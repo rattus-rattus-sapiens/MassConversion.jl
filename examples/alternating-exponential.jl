@@ -24,10 +24,10 @@ function main()
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end
 
-@time rec = main()
-md = MassConversion.calc_mean(rec.trajectories_discrete)
-mc = MassConversion.calc_mean(rec.trajectories_continuum)
+rec = main();
+md = MassConversion.calc_mean(rec.trajectories_discrete);
+mc = MassConversion.calc_mean(rec.trajectories_continuum);
 
-plot(md')
-plot!(mc')
-plot!(md' .+ mc')
+plot(md');
+plot!(mc');
+plot!(md' .+ mc');
