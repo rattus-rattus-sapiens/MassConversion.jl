@@ -7,7 +7,7 @@ using Dates
 using Plots
 
 include("data_structures.jl")
-include("data_functions.jl")
+include("data_manipulation.jl")
 include("mcm_functions.jl")
 include("gillespie_functions.jl")
 
