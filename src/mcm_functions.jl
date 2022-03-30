@@ -21,6 +21,31 @@ function sample_dist(a::Union{AbstractArray{T},Tuple{Vararg{T}}}, a₀::T) where
     return i
 end
 
+function exec_transition!(state::Vector, Kn::Int64, tid::Int64)
+    if tid <= Kn
+        state[tid] -= 1
+        state[tid+Kn] += 1
+    else
+        if state[tid] < 1
+            if rand() < state[tid]
+                state[tid] = 0
+                state[tid-Kn] += 1
+            end
+        else
+            state[tid] -= 1
+            state[tid-Kn] += 1
+        end
+    end
+end
+
+function B!(_alpha, _state, λ, enumθ, Rn, Kn)
+    for (j, pair) in enumθ
+        _alpha[Rn+j] = λ[Rn+j] * _state[j] * (_state[j] + _state[j+Kn] > pair[2])
+        _alpha[Rn+j+Kn] = λ[Rn+j] * _state[j+Kn] * (_state[j] + _state[j+Kn] < pair[1])
+    end
+    return nothing
+end
+
 """
     run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
 
@@ -45,11 +70,7 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
 
     # Input sanitisation
     IC = Vector{Float64}(IC)
-
-    # Get constants
-    tn = floor(Int64, tf / dt) + 1
-    Kn = floor(Int64, length(IC)/2) # Number of unique species
-    Rn = size(R, 2) # Number of non-transitional reactions
+    θ = [Tuple(Float64[θ[i]...]) for i in 1:length(θ)] # TODO?: Casts tuple type to (Float64, Float64)
 
     # Preallocation
     rec = zeros(2 * Kn, tn, rn)
@@ -69,14 +90,7 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
     end
 
     # Propensity function for transitional reactions
-    function B!(_alpha, _state)
-        for (index, pair) in enumerate(θ)
-            j = 2*(index-1) + 1
-            _alpha[Rn+j] = λ[Rn+j] * _state[index+Kn] * (_state[index] + _state[index+Kn] <= pair[1])
-            _alpha[Rn+j+1] = λ[Rn+j] * _state[index] * (_state[index] + _state[index+Kn] > pair[2])
-        end
-        return nothing
-    end
+    enumθ = enumerate(θ)
 
     for ri ∈ 1:rn
         # Initial conditions
@@ -89,6 +103,7 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
         while t < tf
             # Update propensity functions
             A!(α, state, t, λ)
+            B!(α, state, λ, enumθ, Rn, Kn)
             α₀ = sum(α)
 
             # Time to next reaction
@@ -98,7 +113,11 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
                 # Execute stochastic event
                 t += τ
                 reaci = sample_dist(α, α₀)
-                R!(state, reaci)
+                if reaci <= Rn
+                    R!(state, reaci)
+                else
+                    exec_transition!(state, Kn, reaci - Rn)
+                end
             else
                 # Execute ODE update
                 F!(dxdt, state, t, λ)
