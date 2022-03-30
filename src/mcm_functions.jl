@@ -37,7 +37,7 @@ Run the mass-conversion method.
 - `A!` : Function for computing propensity functions for all non-transitional reactions
 - `rn` : Number of repeats
 """
-function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, F!::Function, A!::Function, rn::Int64) where T <: Real
+function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vector{Tuple}, F!::Function, A!::Function, rn::Int64) where T <: Real
 
     # Match type
     IC = Vector{Float64}(IC)
