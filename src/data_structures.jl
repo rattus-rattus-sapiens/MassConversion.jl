@@ -2,9 +2,16 @@ abstract type Output end
 
 struct SSAOutput <: Output
     trajectories_discrete::Array
-    function SSAOutput(t::Array{T, 3}) where T <: Real
+    tf::Float64
+    dt::Float64
+    IC::Vector{Int64}
+    λ::Vector{Float64} 
+    R::Matrix
+    rn::Int64
+    description::String
+    function SSAOutput(t::Array{T, 3}, tf, dt, IC, λ, R, rn, desc::String="") where T <: Real
         t = permutedims(t, [2, 1, 3])
-        new(t)
+        new(t, tf, dt, IC, λ, R, rn, desc)
     end
 end
 
@@ -19,10 +26,10 @@ end
     θ::Vector{Tuple}
     rn::Int64
     description::String
-    function MCMOutput(t::Array{T, 3}, tf, dt, IC, λ, R, θ, rn) where T <: Real
+    function MCMOutput(t::Array{T, 3}, tf, dt, IC, λ, R, θ, rn, desc::String="") where T <: Real
         ns = floor(Int64, size(t, 1)/2);
         t1 = permutedims(t[1:ns, :, :], [2, 1, 3])
         t2 = permutedims(t[ns+1:end, :, :], [2, 1, 3])
-        new(t1, t2, tf, dt, IC, λ, R, θ, rn, "")
+        new(t1, t2, tf, dt, IC, λ, R, θ, rn, desc)
     end
 end
