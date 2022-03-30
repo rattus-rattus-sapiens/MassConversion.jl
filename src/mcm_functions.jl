@@ -47,15 +47,20 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
     IC = Vector{Float64}(IC)
 
     # Get constants
-    const tn = floor(Int64, tf / dt) + 1
-    const Kn = floor(Int64, length(IC)/2) # Number of unique species
-    const Rn = size(R, 2) # Number of non-transitional reactions
+    tn = floor(Int64, tf / dt) + 1
+    Kn = floor(Int64, length(IC)/2) # Number of unique species
+    Rn = size(R, 2) # Number of non-transitional reactions
 
     # Preallocation
     rec = zeros(2 * Kn, tn, rn)
     state = similar(IC)
     α = zeros(Rn + 2 * Kn)
     dxdt = zeros(2 * Kn)
+
+    # Add transitional reactions to stoichiometry matrix
+    for (pair, index) in enumerate(θ)
+        
+    end
 
     for ri ∈ 1:rn
         # Initial conditions
