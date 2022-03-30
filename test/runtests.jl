@@ -8,10 +8,14 @@ using Test
         traj1 = ones(10, 1000, 250)
 
         model = MassConversion.MCMOutput(traj1, 10.0, 0.1, [1.0, 1.0], [0.0], rand(Int64, 2, 2), [(0,0)], 100)
-        @test size(model.trajectories_continuum) == (5, 1000, 250)
-        @test size(model.trajectories_discrete)  == (5, 1000, 250)
+        @test size(model.trajectories_continuum) == (1000, 5, 250)
+        @test size(model.trajectories_discrete)  == (1000, 5, 250)
         @test all(model.trajectories_continuum .== 1.0)
         @test all(model.trajectories_discrete .== 1.0)
+
+        md = MassConversion.calc_mean(model.trajectories_discrete)
+        @test all(md .≈ 1)
+        @test size(md) == (1000, 5)
     end
 
     @testset "Transition execution" begin

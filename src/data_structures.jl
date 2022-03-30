@@ -20,8 +20,8 @@ struct MCMOutput <: Output
     description::String
     function MCMOutput(t::Array{T, 3}, tf, dt, IC, λ, R, θ, rn) where T <: Real
         ns = floor(Int64, size(t, 1)/2);
-        t1 = t[1:ns, :, :]
-        t2 = t[ns+1:end, :, :]
+        t1 = permutedims(t[1:ns, :, :], [2, 1, 3])
+        t2 = permutedims(t[ns+1:end, :, :], [2, 1, 3])
         new(t1, t2, tf, dt, IC, λ, R, θ, rn, "")
     end
 end
