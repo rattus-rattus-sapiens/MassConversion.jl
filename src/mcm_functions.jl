@@ -44,13 +44,14 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
 
     # Get timesteps etc
     tn = floor(Int64, tf / dt) + 1
-    K = length(IC)
+    Kn = floor(Int64, length(IC)/2) # Number of unique species
+    Rn = size(R, 2) # Number of non-transitional reactions
 
     # Preallocation
-    rec = zeros(K, tn, rn)
+    rec = zeros(2 * Kn, tn, rn)
     state = similar(IC)
-    α = zeros(reacn)
-    dxdt = zeros(K)
+    α = zeros(Rn + 2 * Kn)
+    dxdt = zeros(2 * Kn)
 
     for ri ∈ 1:rn
         # Initial conditions
