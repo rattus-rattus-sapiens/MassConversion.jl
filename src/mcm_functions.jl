@@ -62,11 +62,33 @@ Run the mass-conversion method.
 - `A!` : Function for computing propensity functions for all non-transitional reactions
 - `rn` : Number of repeats
 """
-function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vector{Tuple}, F!::Function, A!::Function, rn::Int64) where T <: Real
+function run_mcm(
+    tf, 
+    dt, 
+    IC::Vector{T}, 
+    λ::Vector{Float64}, 
+    R::Matrix{Int64}, 
+    θ::Vector{Tuple{S,P}}, 
+    F!::Function, 
+    A!::Function, 
+    rn::Int64
+    ) where {T<:Real,S<:Real,P<:Real}
+
+    # Get constants
+    tn = floor(Int64, tf / dt) + 1
+    Kn = floor(Int64, length(IC) / 2) # Number of unique species
+    Rn = size(R, 2) # Number of non-transitional reactions
 
     # Input validation
-    if length(IC)/2 ≠ floor(length(IC)/2) throw("even number of input species expected") end
-    if size(R, 1) ≠ length(IC) throw("ill-defined stoichimetric matrix") end
+    if length(IC) / 2 ≠ Kn
+        throw("even number of input species expected")
+    end
+    if size(R, 1) ≠ length(IC)
+        throw("ill-defined stoichimetric matrix")
+    end
+    if length(θ) ≠ Kn
+        throw("number of specified thresholds mismatched with number of species")
+    end
 
     # Input sanitisation
     IC = Vector{Float64}(IC)
