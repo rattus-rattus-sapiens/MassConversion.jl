@@ -77,6 +77,7 @@ function run_mcm(
     # Get constants
     tn = floor(Int64, tf / dt) + 1
     Kn = floor(Int64, length(IC) / 2) # Number of unique species
+    Kt = 2 * Kn
     Rn = size(R, 2) # Number of non-transitional reactions
 
     # Input validation
@@ -125,7 +126,9 @@ function run_mcm(
                 t += τ
                 reaci = sample_dist(α, α₀)
                 if reaci <= Rn
-                    R!(state, reaci)
+                    for i in 1:Kt
+                        state[i] += R[i, reaci]
+                    end
                 else
                     exec_transition!(state, Kn, reaci - Rn)
                 end
@@ -146,7 +149,7 @@ function run_mcm(
         rec[:, end, ri] .= state
     end
 
-    return MCMOutput(t::Array{T,3}, tf, dt, IC, λ, R, θ, rn)
+    return MCMOutput(rec, tf, dt, IC, λ, R, θ, rn)
 end
 
 """
