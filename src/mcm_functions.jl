@@ -58,8 +58,24 @@ function run_mcm(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, θ::Vect
     dxdt = zeros(2 * Kn)
 
     # Add transitional reactions to stoichiometry matrix
-    for (pair, index) in enumerate(θ)
-        
+    for i in 1 : Kn
+        j = 2*(i-1) + 1 
+        _v = zeros(2*Kn)
+        _v[j] = 1
+        _v[j+1] = -1
+        R = hcat(R, _v)
+        _v *= -1
+        R = hcat(R, _v)
+    end
+
+    # Propensity function for transitional reactions
+    function B!(_alpha, _state)
+        for (index, pair) in enumerate(θ)
+            j = 2*(index-1) + 1
+            _alpha[Rn+j] = λ[Rn+j] * _state[index+Kn] * (_state[index] + _state[index+Kn] <= pair[1])
+            _alpha[Rn+j+1] = λ[Rn+j] * _state[index] * (_state[index] + _state[index+Kn] > pair[2])
+        end
+        return nothing
     end
 
     for ri ∈ 1:rn
