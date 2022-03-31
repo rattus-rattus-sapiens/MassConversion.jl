@@ -24,3 +24,11 @@ function plot_init(size::Tuple{Int64, Int64}=(600,400))
     p = plot(dpi=300, size=size)
     return p
 end
+
+function plot_save(filename::String="")
+    if filename == ""
+        filename = "examples/plot/" * string(floor(now(), Dates.Second))
+    end
+    savefig(filename)
+    println("File saved at " * filename)
+end
