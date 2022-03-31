@@ -19,15 +19,13 @@ function main()
         a[1] = L[1]*S[1]
     end;
 
-    rn = 100;
+    rn = 1000;
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end
 
 rec = main();
-md = MassConversion.calc_mean(rec.trajectories_discrete);
-mc = MassConversion.calc_mean(rec.trajectories_continuum);
 
-plot(md');
-plot!(mc');
-plot!(md' .+ mc');
+p = plot_init()
+plot_total(rec)
+plot_both(rec)

@@ -21,5 +21,7 @@ export run_ssa
 include("data_io.jl")
 export save_mcm, load_mcm
 
+include("plotting.jl")
+export plot_total, plot_both, plot_init
 
 end
