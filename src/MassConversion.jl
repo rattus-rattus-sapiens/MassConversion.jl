@@ -6,6 +6,7 @@ using JLD2
 using Dates
 using Plots
 using Parameters
+using Statistics
 
 include("data_structures.jl")
 
@@ -22,6 +23,6 @@ include("data_io.jl")
 export save_mcm, load_mcm
 
 include("plotting.jl")
-export plot_total, plot_both, plot_init, plot_save
+export plot_total, plot_both, plot_init, plot_save, plot_rel_err
 
 end
