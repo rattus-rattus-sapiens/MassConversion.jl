@@ -36,8 +36,11 @@ function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Func
         state .= IC
 
         while t < tf
+            # Record
+            record_state!(rec, t, tn, tp, dt, state, ri)
+
             # Update propensity functions
-            A!(α, state, λ)
+            A!(α, state, t, λ)
             α₀ = sum(α)
 
             # Time to next reaction
@@ -50,9 +53,6 @@ function run_ssa(tf, dt, IC::Vector{T}, λ::Vector{Float64}, R::Matrix, A!::Func
                 state[i] += R[i, reaci]
             end
             reac_count[reaci] += 1
-
-            # Record
-            record_state!(rec, t, tn, tp, dt, state, ri)
         end
 
         # Final record
