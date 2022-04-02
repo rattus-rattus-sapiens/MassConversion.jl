@@ -1,4 +1,4 @@
-function save_mcm(rec::O, str::String="test_data") where O
+function save_mcm(rec, str::String="test_data")
     filename = "./examples/dat/" * str * "-" * string(floor(now(), Dates.Second)) * ".jld2"
     jldsave(filename; rec)
     println("Saved at " * filename)
