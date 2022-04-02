@@ -43,7 +43,7 @@ function main(is_ssa::Bool)
         end
     end
 
-    rn = 1000000
+    rn = 1000
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
