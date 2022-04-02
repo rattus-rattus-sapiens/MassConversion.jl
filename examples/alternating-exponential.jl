@@ -1,11 +1,14 @@
 using Revise
 using MassConversion
 using Plots
+using Base.Threads
 using BenchmarkTools
+
+Threads.nthreads()
 
 function main(is_ssa::Bool)
     tf = 10.0
-    dt = 1e-2
+    dt = 5e-4
     λ = [1e0, 2e2, 1e1]
     R = [
         -1 1
@@ -16,10 +19,10 @@ function main(is_ssa::Bool)
         θ = [(Inf, Inf)]
     else
         IC = [0, 1000]
-        θ = [(100, 100)]
+        θ = [(0, 0)]
     end
 
-    ts = (5.0, 7.5)
+    ts = (2.5, 7.5)
 
     function F!(dxdt, S, t, L)
         if ts[1] < t < ts[2]
@@ -39,19 +42,31 @@ function main(is_ssa::Bool)
         end
     end
 
-    rn = 1000
+    rn = 50
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
 
-rec1 = main(false);
-rec2 = main(true);
+O = MassConversion.MCMOutput
+
+data = Vector{Tuple{O,O}}()
+
+Threads.@threads for i = 1:4
+    @time push!(data, (main(false), main(true)))
+    println("Repeat " * string(i) * " Complete")
+end
 
 p = plot_init()
-plot_total(p, rec1, "Total")
-plot_both(p, rec1)
-plot_total(p, rec2, "Pure SSA")
+for (id, pair) in enumerate(data)
+    plot_rel_err(p, pair[1], pair[2], stride=50, label="")
+end
+p
+plot_save("altexp/rel-errs-SSAvODE")
 
 p = plot_init()
-plot_rel_err(rec1, rec2)
-plot_save()
+plot_total(p, data[1][1], "Total")
+plot_both(p, data[1][1])
+hline!([250], color="black", lw=0.5, label="")
+plot_save("altexp/profile-ODE")
+
+#plot_save()
