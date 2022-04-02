@@ -2,6 +2,7 @@ using Revise
 using MassConversion
 using Plots
 using Base.Threads
+using JLD2
 using BenchmarkTools
 
 Threads.nthreads()
@@ -19,7 +20,7 @@ function main(is_ssa::Bool)
         θ = [(Inf, Inf)]
     else
         IC = [0, 1000]
-        θ = [(0, 0)]
+        θ = [(300, 300)]
     end
 
     ts = (2.5, 7.5)
@@ -42,7 +43,7 @@ function main(is_ssa::Bool)
         end
     end
 
-    rn = 50
+    rn = 1000000
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
@@ -51,10 +52,12 @@ O = MassConversion.MCMOutput
 
 data = Vector{Tuple{O,O}}()
 
-Threads.@threads for i = 1:4
+Threads.@threads for i = 1:16
     @time push!(data, (main(false), main(true)))
     println("Repeat " * string(i) * " Complete")
 end
+
+save_mcm(data)
 
 p = plot_init()
 for (id, pair) in enumerate(data)
