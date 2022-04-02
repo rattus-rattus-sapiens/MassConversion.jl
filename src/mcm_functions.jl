@@ -96,7 +96,10 @@ function run_mcm(
     θ = [Tuple(Float64[θ[i]...]) for i in 1:length(θ)] # TODO?: Casts tuple type to (Float64, Float64)
 
     # Preallocation
-    rec = zeros(2 * Kn, tn, rn)
+    md = zeros(Kn, tn)
+    mc = zeros(Kn, tn)
+    Sd = zeros(Kn, tn)
+    Sc = zeros(Kn, tn)
     state = similar(IC)
     α = zeros(Rn + 2 * Kn)
     dxdt = zeros(2 * Kn)
@@ -110,8 +113,12 @@ function run_mcm(
         td = dt
         state .= IC
         ti = 1
-        rec[:, ti, ri] .= state
 
+        for k = 1:Kn
+            md[k, ti], Sd[k, ti] = welford_online(md[k, ti], Sd[k, ti], ri, state[k]) 
+            mc[k, ti], Sc[k, ti] = welford_online(mc[k, ti], Sc[k, ti], ri, state[Kn+k])
+         end
+        
         while t < tf
             # Update propensity functions
             A!(α, state, t, λ)
@@ -139,15 +146,15 @@ function run_mcm(
 
                 # Record
                 ti += 1
-                rec[:, ti, ri] .= state
+                for k = 1:Kn
+                   md[k, ti], Sd[k, ti] = welford_online(md[k, ti], Sd[k, ti], ri, state[k]) 
+                   mc[k, ti], Sc[k, ti] = welford_online(mc[k, ti], Sc[k, ti], ri, state[Kn+k])
+                end
                 t = (ti - 1) * dt
                 td = ti * dt
             end
         end
-
-        # Final record
-        rec[:, end, ri] .= state
     end
 
-    return MCMOutput(rec, tf, dt, IC, λ, R, θ, rn)
+    return MCMOutput(md, mc, Sd, Sc, tf, dt, IC, λ, R, θ, rn)
 end
