@@ -2,10 +2,11 @@ using Revise
 using MassConversion
 using Plots
 using Base.Threads
-using JLD2
 using BenchmarkTools
+using Serialization
+using Dates
 
-Threads.nthreads()
+println("Number of threads ", Threads.nthreads())
 
 function main(is_ssa::Bool)
     tf = 10.0
@@ -43,7 +44,7 @@ function main(is_ssa::Bool)
         end
     end
 
-    rn = 1000000
+    rn = 100000
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
@@ -57,19 +58,20 @@ Threads.@threads for i = 1:16
     println("Repeat " * string(i) * " Complete")
 end
 
-save_mcm(data)
 
-p = plot_init()
-for (id, pair) in enumerate(data)
-    plot_rel_err(p, pair[1], pair[2], stride=50, label="")
-end
-p
-plot_save("altexp/rel-errs-SSAvODE")
+Serialization.serialize("dat/" * string(floor(now(), Dates.Second)) * ".dat", data)
 
-p = plot_init()
-plot_total(p, data[1][1], "Total")
-plot_both(p, data[1][1])
-hline!([250], color="black", lw=0.5, label="")
-plot_save("altexp/profile-ODE")
+#p = plot_init()
+#for (id, pair) in enumerate(data)
+#    plot_rel_err(p, pair[1], pair[2], stride=50, label="")
+#end
+#p
+#plot_save("altexp/rel-errs-SSAvODE")
+#
+#p = plot_init()
+#plot_total(p, data[1][1], "Total")
+#plot_both(p, data[1][1])
+#hline!([250], color="black", lw=0.5, label="")
+#plot_save("altexp/profile-ODE")
 
 #plot_save()

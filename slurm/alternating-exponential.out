@@ -1,0 +1,33 @@
+Number of threads 16
+527.711480 seconds (404.13 k allocations: 61.766 MiB, 0.14% compilation time)
+Repeat 4 Complete
+527.844662 seconds (404.40 k allocations: 63.002 MiB, 0.14% compilation time)
+Repeat 7 Complete
+527.889082 seconds (404.29 k allocations: 64.218 MiB, 0.14% compilation time)
+Repeat 12 Complete
+528.184284 seconds (404.50 k allocations: 65.451 MiB, 0.14% compilation time)
+Repeat 10 Complete
+529.322489 seconds (404.42 k allocations: 66.668 MiB, 0.14% compilation time)
+Repeat 11 Complete
+529.624635 seconds (404.62 k allocations: 67.900 MiB, 0.14% compilation time)
+Repeat 3 Complete
+529.899959 seconds (404.62 k allocations: 69.122 MiB, 0.14% compilation time)
+Repeat 8 Complete
+530.097381 seconds (404.73 k allocations: 70.350 MiB, 0.14% compilation time)
+Repeat 13 Complete
+530.125862 seconds (404.74 k allocations: 71.581 MiB, 0.14% compilation time)
+Repeat 16 Complete
+530.210736 seconds (404.76 k allocations: 72.803 MiB, 0.14% compilation time)
+Repeat 1 Complete
+530.281092 seconds (404.95 k allocations: 74.036 MiB, 0.14% compilation time)
+Repeat 15 Complete
+530.328547 seconds (405.05 k allocations: 75.263 MiB, 0.14% compilation time)
+Repeat 6 Complete
+530.584081 seconds (405.06 k allocations: 76.485 MiB, 0.14% compilation time)
+Repeat 5 Complete
+530.751310 seconds (405.12 k allocations: 77.710 MiB, 0.14% compilation time)
+Repeat 9 Complete
+532.124324 seconds (405.15 k allocations: 78.933 MiB, 0.14% compilation time)
+Repeat 14 Complete
+532.343649 seconds (405.36 k allocations: 80.167 MiB, 0.14% compilation time)
+Repeat 2 Complete
