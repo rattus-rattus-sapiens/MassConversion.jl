@@ -29,11 +29,11 @@ function plot_abs_err(rec1::MCMOutput, rec2::MCMOutput)
     plot!(rec1.tspan, mt1 .- mt2, label="Absolute error")
 end
 
-function plot_save(filename::String="")
+function plot_save(proj::String, filename::String="")
     if filename == ""
-        filename = "examples/plot/" * string(floor(now(), Dates.Second))
+        filename = "examples/" * proj * "plot/" * string(floor(now(), Dates.Second))
     else
-        filename = "examples/plot/" * filename
+        filename = "examples/" * proj * "plot/" * filename
     end
     savefig(filename)
     println("File saved at " * filename)
