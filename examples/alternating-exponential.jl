@@ -58,20 +58,19 @@ Threads.@threads for i = 1:16
     println("Repeat " * string(i) * " Complete")
 end
 
+data = deserialize("slurm/dat/2022-04-02T21:15:21.dat")
 
-Serialization.serialize("dat/" * string(floor(now(), Dates.Second)) * ".dat", data)
+p = plot_init()
+for (id, pair) in enumerate(data)
+    plot_rel_err(p, pair[1], pair[2], stride=50, label="")
+end
+p
+plot_save("altexp/rel-errs-1e5x16")
 
-#p = plot_init()
-#for (id, pair) in enumerate(data)
-#    plot_rel_err(p, pair[1], pair[2], stride=50, label="")
-#end
-#p
-#plot_save("altexp/rel-errs-SSAvODE")
-#
-#p = plot_init()
-#plot_total(p, data[1][1], "Total")
-#plot_both(p, data[1][1])
-#hline!([250], color="black", lw=0.5, label="")
-#plot_save("altexp/profile-ODE")
+p = plot_init()
+plot_total(p, data[1][1], "Total")
+plot_both(p, data[1][1])
+hline!([250], color="black", lw=0.5, label="")
+plot_save("altexp/profile-1e5x16")
 
 #plot_save()
