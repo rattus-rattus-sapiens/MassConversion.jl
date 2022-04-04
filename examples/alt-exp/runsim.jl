@@ -1,15 +1,14 @@
 using Revise
 using MassConversion
-using Plots
 using Base.Threads
-using BenchmarkTools
-using JLD2
-using ProfileView
 
 println("Number of threads ", Threads.nthreads())
 
 #! IO CONFIG
-casename = "alternating-exponential"
+casename = "alt-exp"
+
+println(PROGRAM_FILE)
+println(pwd())
 
 function main(is_ssa::Bool)
     tf = 10.0
@@ -53,6 +52,8 @@ function main(is_ssa::Bool)
 end;
 
 O = MassConversion.MCMOutput
+
+@btime main(false)
 
 data = Vector{Tuple{O,O}}()
 

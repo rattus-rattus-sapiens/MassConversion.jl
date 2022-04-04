@@ -133,7 +133,7 @@ function run_mcm(
                 t += τ
                 reaci = sample_dist(α, α₀)
                 if reaci <= Rn
-                    for i in 1:Kt
+                    @inbounds @simd for i in 1:Kt
                         state[i] += R[i, reaci]
                     end
                 else
