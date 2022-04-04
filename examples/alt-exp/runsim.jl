@@ -4,7 +4,6 @@ using Base.Threads
 
 println("Number of threads ", Threads.nthreads())
 
-
 function main(is_ssa::Bool, rn::Int64)
     tf = 10.0
     dt = 5e-4
@@ -44,14 +43,15 @@ function main(is_ssa::Bool, rn::Int64)
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
 
+O = MassConversion.MCMOutput;
 data = Vector{Tuple{O,O}}();
 
 Threads.@threads for i = 1:4
-    time = @elapsed push!(data, (main(false, 10000), main(true, 10000)))
+    time = @elapsed push!(data, (main(false, 10), main(true, 10)))
     println("Repeat " * string(i) * " complete. Elapsed: " * string(time) * " seconds.")
 end
 
 #! IO CONFIG
 casename = "alt-exp"
 datname = "no-fractional-jumps"
-save_data(data, casename, datname)
+scratch_save(data)
