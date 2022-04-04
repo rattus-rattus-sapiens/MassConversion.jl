@@ -1,8 +1,9 @@
+using Serialization
 using MassConversion
 using Plots
 
-casename = "alt-exp"
-filename = "no-fractional-jumps"
+casename = "alternating-exponential"
+filename = "smalldata.jld2"
 data = load_data(casename, filename)
 
 p = plot_init()

@@ -12,25 +12,25 @@ function main(is_ssa::Bool, rn::Int64)
     R = [
         -1 1
         0 0
-        ]
-        if is_ssa
-            IC = [1000, 0]
-            θ = [(Inf, Inf)]
-        else
-            IC = [0, 1000]
-            θ = [(300, 300)]
-        end
-        
-        ts = (2.5, 7.5)
-        
-        function F!(dxdt, S, t, L)
-            if ts[1] < t < ts[2]
-                dxdt[2] = 0
-            else
-                dxdt[2] = -L[1] * S[2]
-            end
+    ]
+    if is_ssa
+        IC = [1000, 0]
+        θ = [(Inf, Inf)]
+    else
+        IC = [0, 1000]
+        θ = [(300, 300)]
     end
-    
+
+    ts = (2.5, 7.5)
+
+    function F!(dxdt, S, t, L)
+        if ts[1] < t < ts[2]
+            dxdt[2] = 0
+        else
+            dxdt[2] = -L[1] * S[2]
+        end
+    end
+
     function A!(a, S, t, L)
         if ts[1] < t < ts[2]
             a[1] = 0.0
@@ -40,6 +40,8 @@ function main(is_ssa::Bool, rn::Int64)
             a[2] = 0.0
         end
     end
+
+    rn = 100
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
@@ -55,4 +57,4 @@ end
 #! IO CONFIG
 casename = "alt-exp"
 datname = "no-fractional-jumps"
-scratch_save(data)
+save_data(data, casename, "smalldata")
