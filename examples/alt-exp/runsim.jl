@@ -1,4 +1,5 @@
-using Revise
+println("Initialising...")
+
 using MassConversion
 using Base.Threads
 

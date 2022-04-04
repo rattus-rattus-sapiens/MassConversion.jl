@@ -23,6 +23,6 @@ function load_data(casename::String, filename::String)
 end
 
 function scratch_save(rec)
-    filename = "$SCRATCH/" * string(floor(now(), Dates.Second)) * ".jld2"
+    filename = "\$SCRATCH/" * string(floor(now(), Dates.Second)) * ".jld2"
     jldsave(filename; rec)
 end
