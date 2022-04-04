@@ -26,22 +26,19 @@ function exec_transition!(state::Vector, Kn::Int64, tid::Int64)
         state[tid] -= 1
         state[tid+Kn] += 1
     else
-        if state[tid] < 1
-            if rand() < state[tid]
-                state[tid] = 0
-                state[tid-Kn] += 1
-            end
-        else
-            state[tid] -= 1
-            state[tid-Kn] += 1
-        end
+        state[tid] -= 1
+        state[tid-Kn] += 1
     end
 end
 
 function B!(_alpha, _state, λ, enumθ, Rn, Kn)
     @inbounds for (j, pair) in enumθ
         _alpha[Rn+j] = λ[Rn+j] * _state[j] * (_state[j] + _state[j+Kn] > pair[2])
-        _alpha[Rn+j+Kn] = λ[Rn+j] * _state[j+Kn] * (_state[j] + _state[j+Kn] < pair[1])
+        if _state[j+Kn] < 1
+            _alpha[Rn+j+Kn] = 0
+        else
+            _alpha[Rn+j+Kn] = λ[Rn+j] * _state[j+Kn] * (_state[j] + _state[j+Kn] < pair[1])
+        end
     end
     return nothing
 end
