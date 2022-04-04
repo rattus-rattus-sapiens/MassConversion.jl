@@ -3,10 +3,13 @@ using MassConversion
 using Plots
 using Base.Threads
 using BenchmarkTools
-using Serialization
-using Dates
+using JLD2
+using ProfileView
 
 println("Number of threads ", Threads.nthreads())
+
+#! IO CONFIG
+casename = "alternating-exponential"
 
 function main(is_ssa::Bool)
     tf = 10.0
@@ -44,7 +47,7 @@ function main(is_ssa::Bool)
         end
     end
 
-    rn = 1
+    rn = 100
 
     return run_mcm(tf, dt, IC, λ, R, θ, F!, A!, rn)
 end;
@@ -54,23 +57,8 @@ O = MassConversion.MCMOutput
 data = Vector{Tuple{O,O}}()
 
 Threads.@threads for i = 1:1
-    @time push!(data, (main(false), main(true)))
-    println("Repeat " * string(i) * " Complete")
+    time = @elapsed push!(data, (main(false), main(true)))
+    println("Repeat " * string(i) * " complete. Elapsed: " * string(time) * " seconds.")
 end
 
-serialize("dat/testdata.dat", data)
-
-#p = plot_init()
-#for (id, pair) in enumerate(data)
-#    plot_rel_err(p, pair[1], pair[2], stride=50, label="")
-#end
-#p
-##plot_save("rel-errs-1e5x16")
-
-#p = plot_init()
-#plot_total(p, data[1][1], "Total")
-#plot_both(p, data[1][1])
-#hline!([300], color="black", lw=0.5, label="")
-##plot_save("profile-1e5x16")
-
-#plot_save()
+save_data(data, casename, "smalldata")

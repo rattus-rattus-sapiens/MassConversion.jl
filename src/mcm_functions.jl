@@ -39,7 +39,7 @@ function exec_transition!(state::Vector, Kn::Int64, tid::Int64)
 end
 
 function B!(_alpha, _state, λ, enumθ, Rn, Kn)
-    for (j, pair) in enumθ
+    @inbounds for (j, pair) in enumθ
         _alpha[Rn+j] = λ[Rn+j] * _state[j] * (_state[j] + _state[j+Kn] > pair[2])
         _alpha[Rn+j+Kn] = λ[Rn+j] * _state[j+Kn] * (_state[j] + _state[j+Kn] < pair[1])
     end
@@ -114,10 +114,10 @@ function run_mcm(
         state .= IC
         ti = 1
 
-        for k = 1:Kn
+        @inbounds @simd for k = 1:Kn
             md[k, ti], Sd[k, ti] = welford_online(md[k, ti], Sd[k, ti], ri, state[k]) 
             mc[k, ti], Sc[k, ti] = welford_online(mc[k, ti], Sc[k, ti], ri, state[Kn+k])
-         end
+        end
         
         while t < tf
             # Update propensity functions
@@ -126,7 +126,7 @@ function run_mcm(
             α₀ = sum(α)
 
             # Time to next reaction
-            τ = log(1 / rand()) / α₀
+            @fastmath τ = log(1 / rand()) / α₀
 
             if t + τ < td
                 # Execute stochastic event
@@ -146,7 +146,7 @@ function run_mcm(
 
                 # Record
                 ti += 1
-                for k = 1:Kn
+                @inbounds @simd for k = 1:Kn
                    md[k, ti], Sd[k, ti] = welford_online(md[k, ti], Sd[k, ti], ri, state[k]) 
                    mc[k, ti], Sc[k, ti] = welford_online(mc[k, ti], Sc[k, ti], ri, state[Kn+k])
                 end

@@ -1,11 +1,11 @@
 function plot_total(p::P, data::O, label::String="Total") where {P<:Plots.Plot,O<:Output}
     mt = data.μd .+ data.μc
-    plot!(p, data.tspan, mt, label=label)
+    plot!(p, 0:data.dt:data.tf, mt, label=label)
 end
 
 function plot_both(p::P, data::MCMOutput) where {P<:Plots.Plot}
-    plot!(p, data.tspan, data.μd , label="Discrete")
-    plot!(p, data.tspan, data.μc , label="Continuum")
+    plot!(p, 0:data.dt:data.tf, data.μd , label="Discrete")
+    plot!(p, 0:data.dt:data.tf , data.μc , label="Continuum")
 end
 
 function plot_init(size::Tuple{Int64,Int64}=(600, 400))
@@ -20,7 +20,7 @@ function plot_rel_err(p::Plots.Plot, rec1::MCMOutput, rec2::MCMOutput; stride::I
     mt2 = rec2.μd[1:stride:end] .+ rec2.μc[1:stride:end]
     err = similar(mt1)
     @. err = (mt1 - mt2) / mt2
-    plot!(p, rec1.tspan[1:stride:end], err, label=label)
+    plot!(p, 0:rec1.dt:rec1.tf, err, label=label)
 end
 
 function plot_abs_err(rec1::MCMOutput, rec2::MCMOutput)

@@ -20,7 +20,7 @@ include("gillespie_functions.jl")
 export run_ssa
 
 include("data_io.jl")
-export save_mcm, load_mcm
+export save_data, load_data
 
 include("plotting.jl")
 export plot_total, plot_both, plot_init, plot_save, plot_rel_err, plot_abs_err
