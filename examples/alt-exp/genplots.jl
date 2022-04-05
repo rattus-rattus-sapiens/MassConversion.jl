@@ -1,9 +1,9 @@
 using MassConversion
 using Plots
 
-casename = "alt-exp"
-filename = "smalldata"
-data = load_data(casename, filename)
+casename = "alt-exp";
+filename = "fixed-propensities";
+data = load_data(casename, filename);
 
 p = plot_init()
 for (id, pair) in enumerate(data)
@@ -15,6 +15,7 @@ p
 p = plot_init()
 plot_total(p, data[1][1], "Total")
 plot_both(p, data[1][1])
+plot_total(p, data[1][2], "SSA")
 hline!([300], color="black", lw=0.5, label="")
 #plot_save("profile-1e5x16")
 
