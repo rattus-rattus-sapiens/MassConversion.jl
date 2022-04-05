@@ -5,7 +5,6 @@ import Base.iterate
 using JLD2
 using Dates
 using Plots
-using Parameters
 using Statistics
 
 include("data_structures.jl")
