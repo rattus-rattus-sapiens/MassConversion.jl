@@ -15,13 +15,8 @@ function parse_commandline()
     return parse_args(s)
 end
 
-function main()
-    parsed_args = parse_commandline()
-    repno = parsed_args["repno"]
-    blocksize = parsed_args["blocksize"]
-
-    println("Initialising")
-    t_span = 0.0:0.01:10
+function main(repno, blocksize)
+    t_span = 0.0:5e-4:10
     D_init = [0]
     C_init = [1000]
     λ_reac = [1e0, 0.0]
@@ -46,4 +41,8 @@ function main()
     par_run_sim(model, repno, blocksize)
 end;
 
-main()
+parsed_args = parse_commandline()
+repno = parsed_args["repno"]
+blocksize = parsed_args["blocksize"]
+
+@elapsed main(1_000_000, 10_000)
