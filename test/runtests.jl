@@ -16,7 +16,7 @@ using StaticArrays
 
     model  = MassConversion.MCMmodel(t_span, D_init, C_init, λ_reac, λ_tran, R_mat, θ, calc_prop, calc_dxdt)
     state  = MassConversion.MCMstate(model)
-    output = MassConversion.MCMoutput(model)
+    output = MassConversion.MCMraw(model)
 
     @testset verbose=true "MCMmodel Tests" begin
 
@@ -46,7 +46,7 @@ using StaticArrays
         end
     end
 
-    @testset verbose=true "MCMoutput Tests" begin
+    @testset verbose=true "MCMraw Tests" begin
         @testset "scalar params" begin
             @test output.n == 0
         end

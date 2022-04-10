@@ -72,27 +72,71 @@ struct MCMmodel{F,G,S1,S2,S3} <: AbstractModel
 end
 
 # ! --- MCM Output Type ---
-mutable struct MCMoutput
+mutable struct MCMraw
     D::Array{Int64,2}
     C::Array{Float64,2}
     n::Int64
-    function MCMoutput(M::MCMmodel)
+    function MCMraw(M::MCMmodel)
         D = zeros(Float64, M.n_spec, M.t_len)
         C = zeros(Float64, M.n_spec, M.t_len)
         new(D, C, 0)
     end
-    function MCMoutput(D::Array{Int64, 2}, C::Array{Float64, 2}, n::Int64)
+    function MCMraw(D::Array{Int64, 2}, C::Array{Float64, 2}, n::Int64)
         new(D,C,n)
     end
 end
 
-function +(model1::MCMoutput, model2::MCMoutput)
-    MCMoutput(model1.D .+ model2.D, model1.C .+ model2.C, model1.n + model2.n) 
+function +(model1::MCMraw, model2::MCMraw)
+    MCMraw(model1.D .+ model2.D, model1.C .+ model2.C, model1.n + model2.n) 
 end
 
-@inline function record!(out::MCMoutput, D, C, ti)
+function +(::AbstractArray, model::MCMraw) model end
+
+@inline function record!(out::MCMraw, D, C, ti)
     @inbounds @simd for k in 1:length(D)
         out.D[k, ti] += D[k]
         out.C[k, ti] += C[k]
+    end
+end
+
+# ! --- MCM Data Type ---
+struct MCMdata
+    D::Array{Float64, 2}
+    C::Array{Float64, 2}
+    n::Int64
+    function MCMdata(M::MCMraw)
+        new(M.D'./M.n, M.C'./M.n, M.n)
+    end
+    function MCMdata(D,C,n) new(D,C,n) end
+end
+
+Base.zero(::Type{MCMdata}) = MCMdata(zeros(Float64, 0, 0), zeros(Float64, 0, 0), 0)
+Base.iszero(data::MCMdata) = isempty(data.D) || isempty(data.C)
+
+function +(data1::MCMdata, data2::MCMdata) 
+    if iszero(data1)
+        return data2
+    elseif iszero(data2)
+        return data1
+    else
+        n1 = data1.n
+        n2 = data2.n
+        n3 = data1.n + data2.n
+        @. D = (data1.D * n1 + data2.D * n2)/n3
+        @. C = (data1.C * n1 + data2.C * n2)/n3
+        return MCMdata(D,C,n3)
+    end
+end
+
+function +(data::MCMdata, raw::MCMraw)
+    if iszero(data)
+        return MCMdata(raw.D'./raw.n, raw.C'./raw.n, raw.n)
+    else
+        n1 = data.n 
+        n2 = raw.n 
+        n3 = n1 + n2
+        @. D = (data.D * n1 + raw.D')/n3
+        @. C = (data.C * n1 + raw.C')/n3
+        return MCMdata(D,C,n3)
     end
 end

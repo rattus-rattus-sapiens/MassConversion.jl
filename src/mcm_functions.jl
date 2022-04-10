@@ -55,28 +55,31 @@ end
     end
 end
 
-function par_ensemble(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::String=string(floor(now(), Dates.Second)))
-    num_mbs = ((2*model.n_spec*model.t_len*rep_no/blocksize) * 2*model.n_spec * 8)/(1024^2)
+function par_run_sim(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::String=string(floor(now(), Dates.Second)))
+    num_mbs = round(((2*model.n_spec*model.t_len*rep_no/blocksize) * 2*model.n_spec * 8)/(1024^2), digits=3)
+    path = "dat/" * path * "/"
+    n_blocks::Int64 = rep_no / blocksize
+    
     if num_mbs > 100
         throw("disc usage will exceed 100 MiBs - estimated $num_mbs MiBs")
     else
-        println("estimate disc usage $num_mbs")
+        println("Estimated disc usage $num_mbs MiBs. Saving to $path")
+        println("Creating $n_blocks files each of size $(num_mbs*1000) KiB")
     end
 
-    n_blocks::Int64 = rep_no / blocksize
 
-    path = "dat/" * path * "/"
     mkpath(path)
 
     Threads.@threads for _ in 1:n_blocks
         _sim_block(model, blocksize, path)
     end
+    println("")
 end
 
 function _sim_block(model::MCMmodel, blocksize::Int64, path::String)
     filepath = path * string(uuid4())*".jld2"
     # malloc 
-    data = MCMoutput(model)
+    data = MCMraw(model)
     a = Vector{Float64}(undef, model.n_reac + 2*model.n_spec)
     dxdt = zeros(Float64, model.n_spec)
     D = Vector{Int64}(undef, model.n_spec)
