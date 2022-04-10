@@ -1,160 +1,133 @@
-"""
-    sample_dist(a::Union{AbstractArray{T}, Tuple{Vararg{T}}}, a₀::T) where T <: Real
-
-Samples from an unnormalised discrete distribution.
-
-### Arguments
-- `a`: Array/Tuple of weights
-- `a₀`: Sum of weights
-"""
-function sample_dist(a::Union{AbstractArray{T},Tuple{Vararg{T}}}, a₀::T) where {T<:Real}
-
+@inline function sample_dist(a::Vector{T}, a₀::T) where {T<:Real}
     i = 1
     cumsum = a[1]
     r = rand()
-
-    while cumsum < r * a₀
+    @inbounds while cumsum < r * a₀
         i += 1
         cumsum += a[i]
     end
-
     return i
 end
 
-function exec_transition!(state::Vector, Kn::Int64, tid::Int64)
-    if tid <= Kn
-        state[tid] -= 1
-        state[tid+Kn] += 1
-    else
-        if state[tid] < 1
-            if rand() < state[tid]
-                state[tid] = 0
-                state[tid-Kn] += 1
+@inline function move!(D, C, direc::Int64, idx::Int64)
+    @inbounds if direc == 1
+        D[idx] -= 1
+        C[idx] += 1
+    elseif direc == -1
+        if C[idx] < 1
+            if rand() < C[idx]
+                D[idx] += 1
+                C[idx] = 0
             end
         else
-            state[tid] -= 1
-            state[tid-Kn] += 1
+            D[idx] += 1
+            C[idx] -= 1
         end
-    end
-end
-
-function B!(_alpha, _state, λ, enumθ, Rn, Kn)
-    @inbounds for (j, pair) in enumθ
-        _alpha[Rn+j] = λ[Rn+j] * _state[j] * (_state[j] + _state[j+Kn] > pair[2])
-        _alpha[Rn+j+Kn] = λ[Rn+j] * _state[j+Kn] * (_state[j] + _state[j+Kn] < pair[1])
     end
     return nothing
 end
 
-"""
-    run_mcm(tf, dt, IC, λ, R, F!, A!, rn)
-
-Run the mass-conversion method.
-
-### Arguments
-- `tf` : Simulation run time
-- `dt` : Time step
-- `IC` : Vector containing initial condition
-- `λ` : Vector containing rate parameters. The last K parameters, where K is the number of species, is assumed to be the regime transition rate.
-- `R` : Stoichiometric matrix representing all non-transitional reactions
-- `θ` : Vector containing tuples representing the lower and upper thresholds, respectively
-- `F!` : Function for computing dxdt for the forward Euler method
-- `A!` : Function for computing propensity functions for all non-transitional reactions
-- `rn` : Number of repeats
-"""
-function run_mcm(
-    tf, 
-    dt, 
-    IC::Vector{T}, 
-    λ::Vector{Float64}, 
-    R::Matrix{Int64}, 
-    θ::Vector{Tuple{S,P}}, 
-    F!::Function, 
-    A!::Function, 
-    rn::Int64
-    ) where {T<:Real,S<:Real,P<:Real}
-
-    # Get constants
-    tn = floor(Int64, tf / dt) + 1
-    Kn = floor(Int64, length(IC) / 2) # Number of unique species
-    Kt = 2 * Kn
-    Rn = size(R, 2) # Number of non-transitional reactions
-
-    # Input validation
-    if length(IC) / 2 ≠ Kn
-        throw("even number of input species expected")
+@inline function calc_tran(
+    fwd::AbstractVector{Float64},
+    bwd::AbstractVector{Float64},
+    D::AbstractVector{Int64},
+    C::AbstractVector{Float64}, 
+    θ::AbstractVector{Tuple{Float64, Float64}},
+    L::AbstractVector{Float64}
+)
+    @inbounds for (i, pair) in enumerate(θ)
+        fwd[i] = L[i] * D[i] * (D[i] + C[i] > pair[2])
+        bwd[i] = L[i] * C[i] * (D[i] + C[i] < pair[1])
     end
-    if size(R, 1) ≠ length(IC)
-        throw("ill-defined stoichimetric matrix")
+    return nothing
+end
+
+@inline function execute_reaction!(D, C, model, rid)
+    if rid <= model.n_reac
+        @inbounds @simd for k = 1:model.n_spec
+            D[k] += model.R_mat[k, rid]
+            C[k] += model.R_mat[model.n_spec+k, rid]
+        end
+    elseif rid <= model.n_reac + model.n_spec
+        move!(D, C, 1, rid - model.n_reac)
+    else
+        move!(D, C, -1, rid - model.n_reac - model.n_spec)
     end
-    if length(θ) ≠ Kn
-        throw("number of specified thresholds mismatched with number of species")
+end
+
+function par_ensemble(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::String=string(floor(now(), Dates.Second)))
+    num_mbs = ((2*model.n_spec*model.t_len*rep_no/blocksize) * 2*model.n_spec * 8)/(1024^2)
+    if num_mbs > 100
+        throw("disc usage will exceed 100 MiBs - estimated $num_mbs MiBs")
+    else
+        println("estimate disc usage $num_mbs")
     end
 
-    # Input sanitisation
-    IC = Vector{Float64}(IC)
-    θ = [Tuple(Float64[θ[i]...]) for i in 1:length(θ)] # TODO?: Casts tuple type to (Float64, Float64)
+    n_blocks::Int64 = rep_no / blocksize
 
-    # Preallocation
-    md = zeros(Kn, tn)
-    mc = zeros(Kn, tn)
-    Sd = zeros(Kn, tn)
-    Sc = zeros(Kn, tn)
-    state = similar(IC)
-    α = zeros(Rn + 2 * Kn)
-    dxdt = zeros(2 * Kn)
+    path = "dat/" * path * "/"
+    mkpath(path)
 
-    # Propensity function for transitional reactions
-    enumθ = enumerate(θ)
+    Threads.@threads for _ in 1:n_blocks
+        _sim_block(model, blocksize, path)
+    end
+end
 
-    for ri ∈ 1:rn
+function _sim_block(model::MCMmodel, blocksize::Int64, path::String)
+    filepath = path * string(uuid4())*".jld2"
+    # malloc 
+    data = MCMoutput(model)
+    a = Vector{Float64}(undef, model.n_reac + 2*model.n_spec)
+    dxdt = zeros(Float64, model.n_spec)
+    D = Vector{Int64}(undef, model.n_spec)
+    C = Vector{Float64}(undef, model.n_spec)
+
+    # Create views
+    prop_reac = view(a, 1:model.n_reac)
+    prop_tfwd = view(a, model.n_reac+1 : model.n_spec)
+    prop_tbwd = view(a, model.n_reac+model.n_spec+1 : model.n_reac+2*model.n_spec)
+    calc_prop = model.calc_prop
+    calc_dxdt = model.calc_dxdt
+
+    for _ in 1:blocksize
         # Initial conditions
+        D::Vector{Int64} .= model.D_init
+        C::Vector{Float64} .= model.C_init
         t = 0.0
-        td = dt
-        state .= IC
+        td = model.t_step
         ti = 1
 
-        @inbounds @simd for k = 1:Kn
-            md[k, ti], Sd[k, ti] = welford_online(md[k, ti], Sd[k, ti], ri, state[k]) 
-            mc[k, ti], Sc[k, ti] = welford_online(mc[k, ti], Sc[k, ti], ri, state[Kn+k])
-        end
+        record!(data, D, C, ti)
+
+        while t < model.t_final
+            # Update propensities
+            calc_prop(prop_reac, D, C, t, model.λ_reac)
+            calc_tran(prop_tfwd, prop_tbwd, D, C, model.θ, model.λ_tran)
+            a0 = sum(a)
         
-        while t < tf
-            # Update propensity functions
-            A!(α, state, t, λ)
-            B!(α, state, λ, enumθ, Rn, Kn)
-            α₀ = sum(α)
-
-            # Time to next reaction
-            @fastmath τ = log(1 / rand()) / α₀
-
+            # Get next reaction time
+            @fastmath τ = log(1/rand())/a0
+        
             if t + τ < td
-                # Execute stochastic event
                 t += τ
-                reaci = sample_dist(α, α₀)
-                if reaci <= Rn
-                    @inbounds @simd for i in 1:Kt
-                        state[i] += R[i, reaci]
-                    end
-                else
-                    exec_transition!(state, Kn, reaci - Rn)
-                end
+                rid = sample_dist(a, a0)
+                execute_reaction!(D, C, model, rid)
             else
-                # Execute ODE update
-                F!(dxdt, state, t, λ)
-                @. state += dt * dxdt
+                calc_dxdt(dxdt, D, C, t, model.λ_reac)
+                @. C += model.t_step * dxdt
 
-                # Record
+                # record
                 ti += 1
-                @inbounds @simd for k = 1:Kn
-                   md[k, ti], Sd[k, ti] = welford_online(md[k, ti], Sd[k, ti], ri, state[k]) 
-                   mc[k, ti], Sc[k, ti] = welford_online(mc[k, ti], Sc[k, ti], ri, state[Kn+k])
-                end
-                t = (ti - 1) * dt
-                td = ti * dt
+                record!(data, D, C, ti)
+                t = (ti - 1) * model.t_step
+                td = ti * model.t_step
             end
+
         end
+        data.n += 1
     end
 
-    return MCMOutput(md, mc, Sd, Sc, tf, dt, IC, λ, R, θ, rn)
+    jldsave(filepath; data)
+    return data
+
 end

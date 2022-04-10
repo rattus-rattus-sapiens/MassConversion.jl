@@ -1,68 +1,35 @@
 println("Initialising...")
 
+using Revise
 using MassConversion
+using BenchmarkTools
 using Base.Threads
 
 println("Number of threads ", Threads.nthreads())
 
-function main(is_ssa::Bool, reac_num::Int64, pid::Int64)
-    t_fin = 10.0
-    λ_reac = [1e0, 2e2, 1e2]
-    t_step = 5e-4
-    reac_mat = [
-        -1 1
+function main()
+    t_span = 0.0:0.01:10
+    D_init = [0]
+    C_init = [1000]
+    λ_reac = [1e0, 0.0]
+    λ_tran = 1.0
+    R_mat = [
+        -1 0
         0 0
     ]
-    if is_ssa
-        C_init = [1000, 0]
-        θ_list = [(Inf, Inf)]
-    else
-        C_init = [0, 1000]
-        θ_list = [(0, 0)]
+    θ = [(150, 200)]
+
+    @inline function F!(dxdt, D, C, t, L)
+        dxdt[1] = -L[1]*C[1]
     end
 
-    ts = (2.5, 7.5)
-
-    function F!(dxdt, S, t, λ_reac)
-        if is_ssa
-            dxdt[2] = 0.0
-        else
-            if ts[1] ≤ t ≤ ts[2]
-                dxdt[2] = λ_reac[2] 
-            else
-                dxdt[2] = -λ_reac[1] * S[2]
-            end
-        end
+    @inline function A!(a, D, C, t, L)
+        a[1] = L[1]*D[1]
     end
 
-    function A!(a, S, t, λ_reac)
-        if is_ssa
-            if ts[1] ≤ t ≤ ts[2]
-                a[1] = 0.0
-                a[2] = λ_reac[2]
-            else
-                a[1] = λ_reac[1] * S[1]
-                a[2] = 0.0
-            end
-        else
-            a[1] = 0.0
-            a[2] = 0.0
-        end
-        return nothing
-    end
+    model = MassConversion.MCMmodel(t_span, D_init, C_init, λ_reac, λ_tran, R_mat, θ, A!, F!)
 
-    return run_mcm(t_fin, t_step, C_init, λ_reac, reac_mat, θ_list, F!, A!, reac_num)
+    return MassConversion._sim_block(model, 100, "testdata/")
 end;
 
-O = MassConversion.MCMOutput;
-data = Vector{Tuple{O,O}}();
-
-Threads.@threads for i = 1:16
-    time = @elapsed push!(data, (main(false, 100), main(true, 100)))
-    println("Repeat " * string(i) * " complete. Elapsed: " * string(time) * " seconds.")
-end
-
-#! IO CONFIG
-casename = "alt-exp";
-datname = "fixed-propensities";
-save_data(data, casename, datname);
+@time main()
