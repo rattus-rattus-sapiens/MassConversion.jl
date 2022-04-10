@@ -32,3 +32,11 @@ function load_data(casename::String, filename::String, keyname::String)
         return file[keyname]
     end
 end
+
+function rand_ID()
+    str = ""
+    for i=1:16
+        str*=rand("1234567890ABCDEF")
+    end
+    return str
+end

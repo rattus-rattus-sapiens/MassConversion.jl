@@ -8,15 +8,8 @@ using Plots
 using Statistics
 
 include("data_structures.jl")
-export to_dict
-
-include("math_functions.jl")
 
 include("mcm_functions.jl")
-export run_mcm
-
-include("gillespie_functions.jl")
-export run_ssa
 
 include("data_io.jl")
 export save_data, load_data, scratch_save

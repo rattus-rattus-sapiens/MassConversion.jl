@@ -1,44 +1,23 @@
-abstract type Output end
+abstract type AbstractModel end
 
-struct SSAOutput <: Output
-    trajectories_discrete::Array
-    tf::Float64
-    dt::Float64
-    IC::Vector{Int64}
-    λ::Vector{Float64} 
-    R::Matrix
-    rn::Int64
-    description::String
-    function SSAOutput(t::Array{T, 3}, tf, dt, IC, λ, R, rn, desc::String="") where T <: Real
-        t = permutedims(t, [2, 1, 3])
-        new(t, tf, dt, IC, λ, R, rn, desc)
-    end
+# TODO: Implement interface with DiffEqs.jl
+struct SSAModel <: AbstractModel
 end
 
-struct MCMOutput <: Output
-    μd::Array{Float64}
-    μc::Array{Float64}
-    σd::Array{Float64}
-    σc::Array{Float64}
-    tf::Float64
-    dt::Float64
-    IC::Vector{Float64}
-    λ::Vector{Float64}
-    R::Matrix{Int64}
-    θ::Vector{Tuple{Float64, Float64}}
-    rn::Int64
-    function MCMOutput(md, mc, Sd, Sc, tf, dt, IC, λ, R, θ, rn)
-        md = permutedims(md, [2 1])
-        mc = permutedims(mc, [2 1])
-        Sd = permutedims(Sd, [2 1]) ./ (rn - 1)
-        Sc = permutedims(Sc, [2 1]) ./ (rn - 1)
-        new(md, mc, Sd, Sc, tf, dt, IC, λ, R, θ, rn)
-    end
+struct ODEModel <: AbstractModel
 end
 
-"""
-    to_dict(::O) where O <: Output
-"""
-function to_dict(dat::O) where {O<:Output}
-    return Dict(key => getfield(dat, key) for key ∈ fieldnames(O))
+const TimeRange = 
+const Thresholds = Base.Iterators.Enumerate{Vector{Tuple{Float64, Float64}}}
+
+@with_kw struct MCMmodel{F,G} <: AbstractModel
+    t_range::StepRangeLen{Float64, Base.TwicePrecision{Float64}, Base.TwicePrecision{Float64}, Int64}
+    D_init::Vector{Int64}
+    C_init::Vector{Float64}
+    λ_reac::Vector{Float64}
+    R_mat::Matrix{Int64}
+    θ_list::Vector{Tuple{Float64, Float64}}
+    rep_num::Int64
+    alpha::F
+    dxdt::G
 end
