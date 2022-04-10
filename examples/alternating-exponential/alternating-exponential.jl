@@ -1,6 +1,25 @@
 using MassConversion
+using ArgParse
 
-function main(reps::Int64, blocksize::Int64)
+function parse_commandline()
+    s = ArgParseSettings()
+
+    @add_arg_table s begin
+        "--repno", "-r"
+            help = "Number of repeats to simulate"
+            arg_type = Int
+        "--blocksize", "-b"
+            help = "Number of repeats per save datafile"
+            arg_type = Int
+    end
+    return parse_args(s)
+end
+
+function main()
+    parsed_args = parse_commandline()
+    repno = parsed_args["repno"]
+    blocksize = parsed_args["blocksize"]
+
     println("Initialising")
     t_span = 0.0:0.01:10
     D_init = [0]
@@ -24,10 +43,7 @@ function main(reps::Int64, blocksize::Int64)
     model = MassConversion.MCMmodel(t_span, D_init, C_init, λ_reac, λ_tran, R_mat, θ, A!, F!)
     
     println("Number of threads ", Threads.nthreads())
-    par_run_sim(model, 10_000, 1_000)
+    par_run_sim(model, repno, blocksize)
 end;
 
-reps = Meta.parse(string(ARGS[1]))
-blocksize = Meta.parse(string(ARGS[2]))
-
-main(ARGS[1], ARGS[2])
+main()
