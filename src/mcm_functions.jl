@@ -1,4 +1,4 @@
-@inline function sample_dist(a::Vector{T}, a₀::T) where {T<:Real}
+@inline function sample_dist(a::AbstractVector{T}, a₀::T) where {T<:Real}
     i = 1
     cumsum = a[1]
     r = rand()
@@ -65,27 +65,24 @@ function par_run_sim(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::Str
     else
         println("Estimated disc usage $num_mbs MiBs. Saving to $path")
         println("Creating $n_blocks files each of size $(num_mbs*1000) KiB")
+        mkpath(path)
     end
-
-
-    mkpath(path)
 
     Threads.@threads for n in 1:n_blocks
         t = @elapsed _sim_block(model, blocksize, path)
         t = round(t, digits=5)
         println("Block $n created, elapsed $t seconds")
     end
-    println("")
 end
 
-function _sim_block(model::MCMmodel, blocksize::Int64, path::String)
+@inline function _sim_block(model::MCMmodel{F,G,S1,S2,S3}, blocksize::Int64, path::String) where {F,G,S1,S2,S3}
     filepath = path * string(uuid4())*".jld2"
     # malloc 
     data = MCMraw(model)
-    a = Vector{Float64}(undef, model.n_reac + 2*model.n_spec)
-    dxdt = zeros(Float64, model.n_spec)
-    D = Vector{Int64}(undef, model.n_spec)
-    C = Vector{Float64}(undef, model.n_spec)
+    a = MVector{S2+S3, Float64}(zeros(Float64, S2+S3))
+    dxdt = MVector{S1, Float64}(zeros(Float64, S1))
+    D = MVector{S1, Int64}(zeros(Int64, S1))
+    C = MVector{S1, Float64}(zeros(Float64, S1))
 
     # Create views
     prop_reac = view(a, 1:model.n_reac)
@@ -96,8 +93,8 @@ function _sim_block(model::MCMmodel, blocksize::Int64, path::String)
 
     for _ in 1:blocksize
         # Initial conditions
-        D::Vector{Int64} .= model.D_init
-        C::Vector{Float64} .= model.C_init
+        D .= model.D_init
+        C .= model.C_init
         t = 0.0
         td = model.t_step
         ti = 1
@@ -132,7 +129,7 @@ function _sim_block(model::MCMmodel, blocksize::Int64, path::String)
         data.n += 1
     end
 
-    jldsave(filepath; data)
+    #jldsave(filepath; data)
     return data
 
 end
