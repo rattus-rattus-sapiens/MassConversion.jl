@@ -70,8 +70,10 @@ function par_run_sim(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::Str
 
     mkpath(path)
 
-    Threads.@threads for _ in 1:n_blocks
-        _sim_block(model, blocksize, path)
+    Threads.@threads for n in 1:n_blocks
+        t = @elapsed _sim_block(model, blocksize, path)
+        t = round(t, digits=5)
+        println("Block $n created, elapsed $t seconds")
     end
     println("")
 end
