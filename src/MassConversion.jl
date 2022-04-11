@@ -6,10 +6,12 @@ using Dates
 using UUIDs
 using JLD2
 
-include("mcm_structures.jl")
+abstract type AbstractModel end
+
+include("structures_mcm.jl")
 export MCMmodel
 
-include("ssa_structures.jl")
+include("structures_ssa.jl")
 export SSAmodel
 
 include("simulate.jl")

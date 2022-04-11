@@ -1,5 +1,5 @@
 # ! ----- SSA Model Type -----
-struct SSAmodel{F,S1,S2}
+struct SSAmodel{F,S1,S2} <: AbstractModel
     t_start::Float64
     t_step::Float64
     t_final::Float64
@@ -14,9 +14,9 @@ struct SSAmodel{F,S1,S2}
     # Constructor
     function SSAmodel(
         t_span::AbstractRange,
-        D_init::AbstractVector{Int64}
-        λ_reac::AbstractVector{T1}
-        R_mat::Matrix{Int64}
+        D_init::AbstractVector{Int64},
+        λ_reac::AbstractVector{T1},
+        R_mat::Matrix{Int64},
         calc_prop::Function
     ) where {T1<:Real}
 
