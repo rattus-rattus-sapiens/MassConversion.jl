@@ -1,25 +1,16 @@
-function load_raw(path::String)
-    files = "$path/" .* readdir(path)
-    n_files = length(files)
-    println("Loading $n_files files...")
-    data = []
-    for filename in files
-        data += load(filename, "data")
+function load_raw(dataloc::String)
+    path = joinpath(pwd(), dataloc)
+    dircontents = readdir(path)
+    mcm_data = nothing
+    ssa_data = nothing
+    if "MCM" ∈ dircontents
+        files = readdir("$path/MCM", join=true)
+        mcm_data = [MCMdata(load(file, "data_mcm")) for file in files]
     end
-    println("Files loaded")
-    return MCMdata(data)
-end
-
-function load_ensemble(path::String, samples::Int64)
-    files = "$path/" .* readdir(path)
-    n_files = length(files)
-    files_per_block = n_files ÷ samples
-    println("Loading $samples batches of $files_per_block files")
-    data = zeros(MCMdata, samples)
-    for j = 1:samples
-        for filename in files[(j-1)*files_per_block+1 : j*files_per_block]
-            data[j] += load(filename, "data")
-        end
+    if "SSA" ∈ dircontents
+        files = readdir("$path/SSA", join=true)
+        ssa_data = [SSAdata(load(file, "data_ssa")) for file in files]
     end
-    return data
+    println("Loaded")
+    return mcm_data, ssa_data
 end
