@@ -9,7 +9,10 @@ using JLD2
 include("mcm_structures.jl")
 export MCMmodel
 
-include("sim_functions.jl")
+include("ssa_structures.jl")
+export SSAmodel
+
+include("simulate.jl")
 export par_run_sim
 
 include("data_io.jl")
