@@ -6,10 +6,10 @@ using Dates
 using UUIDs
 using JLD2
 
-include("data_structures.jl")
-export MCMmodel, MCMraw
+include("mcm_structures.jl")
+export MCMmodel
 
-include("mcm_functions.jl")
+include("sim_functions.jl")
 export par_run_sim
 
 include("data_io.jl")

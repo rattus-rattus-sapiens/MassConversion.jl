@@ -25,7 +25,7 @@ function main(repno, blocksize)
         -1 0
         0 0
     ]
-    θ = [(150, 200)]
+    θ = [(250, 250)]
 
     @inline function F!(dxdt, D, C, t, L)
         dxdt[1] = -L[1] * C[1]
@@ -45,4 +45,4 @@ parsed_args = parse_commandline()
 repno = parsed_args["repno"]
 blocksize = parsed_args["blocksize"]
 
-@elapsed main(10_000, 10_000)
+main(repno, blocksize)
