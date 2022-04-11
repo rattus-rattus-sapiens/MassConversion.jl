@@ -55,26 +55,6 @@ end
     end
 end
 
-function par_run_sim(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::String=string(floor(now(), Dates.Second)))
-    num_mbs = round(((2*model.n_spec*model.t_len*rep_no/blocksize) * 2*model.n_spec * 8)/(1024^2), digits=3)
-    path = "dat/" * path * "/"
-    n_blocks::Int64 = rep_no / blocksize
-    
-    if num_mbs > 100
-        throw("disc usage will exceed 100 MiBs - estimated $num_mbs MiBs")
-    else
-        println("Estimated disc usage $num_mbs MiBs. Saving to $path")
-        println("Creating $n_blocks files each of size $(num_mbs*1000) KiB")
-        mkpath(path)
-    end
-
-    Threads.@threads for n in 1:n_blocks
-        t = @elapsed _sim_block(model, blocksize, path)
-        t = round(t, digits=5)
-        println("Block $n created, elapsed $t seconds")
-    end
-end
-
 @inline function _sim_block(model::MCMmodel{F,G,S1,S2,S3}, blocksize::Int64, path::String) where {F,G,S1,S2,S3}
     filepath = path * string(uuid4())*".jld2"
     # malloc 
@@ -90,7 +70,7 @@ end
     prop_tbwd = view(a, model.n_reac+model.n_spec+1 : model.n_reac+2*model.n_spec)
     calc_prop = model.calc_prop
     calc_dxdt = model.calc_dxdt
-
+    
     for _ in 1:blocksize
         # Initial conditions
         D .= model.D_init
@@ -98,18 +78,18 @@ end
         t = 0.0
         td = model.t_step
         ti = 1
-
+        
         record!(data, D, C, ti)
-
+        
         while t < model.t_final
             # Update propensities
             calc_prop(prop_reac, D, C, t, model.λ_reac)
             calc_tran(prop_tfwd, prop_tbwd, D, C, model.θ, model.λ_tran)
             a0 = sum(a)
-        
+            
             # Get next reaction time
             @fastmath τ = log(1/rand())/a0
-        
+            
             if t + τ < td
                 t += τ
                 rid = sample_dist(a, a0)
@@ -129,7 +109,27 @@ end
         data.n += 1
     end
 
-    #jldsave(filepath; data)
+    jldsave(filepath; data)
     return data
+    
+end
 
+function par_run_sim(model::MCMmodel, rep_no::Int64, blocksize::Int64, path::String=string(floor(now(), Dates.Second)))
+    num_mbs = round(((2*model.n_spec*model.t_len*rep_no/blocksize) * 2*model.n_spec * 8)/(1024^2), digits=3)
+    path = "dat/" * path * "/"
+    n_blocks::Int64 = rep_no / blocksize
+    
+    if num_mbs > 100
+        throw("disc usage will exceed 100 MiBs - estimated $num_mbs MiBs")
+    else
+        println("Estimated disc usage $num_mbs MiBs. Saving to $path")
+        println("Creating $n_blocks files each of size $(num_mbs*1000) KiB")
+        mkpath(path)
+    end
+
+    Threads.@threads for n in 1:n_blocks
+        t = @elapsed _sim_block(model, blocksize, path)
+        t = round(t, digits=5)
+        println("Block $n created, elapsed $t seconds")
+    end
 end
