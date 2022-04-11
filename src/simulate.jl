@@ -61,8 +61,7 @@ end
     end
 end
 
-@inline function _sim_block(model::MCMmodel{F,G,S1,S2,S3}, blocksize::Int64, path::String) where {F,G,S1,S2,S3}
-    filepath = path * string(uuid4()) * ".jld2"
+@inline function _sim_block(model::MCMmodel{F,G,S1,S2,S3}, blocksize::Int64) where {F,G,S1,S2,S3}
     # malloc 
     data = MCMraw(model)
     a = MVector{S2 + S3,Float64}(zeros(Float64, S2 + S3))
@@ -115,16 +114,11 @@ end
         data.n += 1
     end
 
-    jldsave(filepath; data)
     return data
 
 end
 
-@inline function _sim_block(model::SSAmodel{F,S1,S2}, blocksize::Int64, path::String) where {F,S1,S2}
-
-    # gen uuid for data
-    filepath = path * string(uuid4()) * ".jld"
-
+@inline function _sim_block(model::SSAmodel{F,S1,S2}, blocksize::Int64) where {F,S1,S2}
     # malloc
     data = SSAraw(model)
     a = MVector{S2,Float64}(zeros(Float64, S2))
@@ -165,14 +159,13 @@ end
         data.n += 1
     end
 
-    jldsave(filepath; data)
     return data
 
 end
 
-function par_run_sim(model::AbstractModel, rep_no::Int64, blocksize::Int64)
+function par_run_sim(model::M, rep_no::Int64, blocksize::Int64) where M<:AbstractModel
     num_mbs = round((8 * 2 * model.n_spec * model.t_len * rep_no / blocksize) / (1024^2), digits=3)
-    path = "dat/" * Dates.format(now(), "e-dd-HH:MM:SS") * "/"
+    path = "dat/" * Dates.format(now(), "e-dd-HH:MM:SS") * "/" * string(M)[1:3] * "/"
     n_blocks::Int64 = rep_no / blocksize
 
     if num_mbs > 100
@@ -184,7 +177,8 @@ function par_run_sim(model::AbstractModel, rep_no::Int64, blocksize::Int64)
     end
 
     Threads.@threads for n in 1:n_blocks
-        t = @elapsed _sim_block(model, blocksize, path)
+        t = @elapsed data = _sim_block(model, blocksize)
+        jldsave(path*string(uuid4())*".jld2"; data_mcm=data)
         t = round(t, digits=5)
         println("Block $n created, elapsed $t seconds")
     end
@@ -193,23 +187,26 @@ end
 par_run_sim(ssa::SSAmodel, mcm::MCMmodel, rep_no, blocksize) = par_run_sim(mcm, ssa, rep_no, blocksize)
 
 function par_run_sim(mcm::MCMmodel, ssa::SSAmodel, rep_no::Int64, blocksize::Int64)
-    n_mibs_mcm = round((8 * 2 * mcm.n_spec * mcm.t_len * rep_no) / (1024^2), digits=3)
-    n_mibs_ssa = round((8 * ssa.n_spec * ssa.t_len * rep_no) / (1024^2), digits=3)
-    n_mibs = n_mibs_mcm + n_mibs_ssa
-    path = "dat/" * Dates.format(now(), "e-dd-HH:MM:SS") * "/"
     n_blocks = rep_no ÷ blocksize
+    n_mibs_mcm = (8 * 2 * mcm.n_spec * mcm.t_len * n_blocks) / (1024^2)
+    n_mibs_ssa = (8 * ssa.n_spec * ssa.t_len * n_blocks) / (1024^2)
+    n_mibs = round(n_mibs_mcm + n_mibs_ssa, digits=3)
+    path = "dat/" * Dates.format(now(), "e-dd-HH:MM:SS")
 
     if n_mibs > 100
         throw("disc usage will exceed 100 MiBs - estimated $n_mibs")
     else
-        println("Estimated disc usage $n_mibs MiBs. Saving to $path")
-        mkpath(path*"mcm/")
-        mkpath(path*"ssa/")
+        println("Estimated disc usage $n_mibs MiBs. $n_blocks blocks. \nSaving to $path:\n")
+        mkpath(joinpath(path, "MCM"))
+        mkpath(joinpath(path, "SSA"))
     end
 
     Threads.@threads for n in 1:n_blocks
-        t = @elapsed _sim_block(mcm, blocksize, path*"mcm/")
-        t += @elapsed _sim_block(ssa, blocksize, path*"ssa/")
+        t = @elapsed data_mcm = _sim_block(mcm, blocksize)
+        t += @elapsed data_ssa = _sim_block(ssa, blocksize)
+        jldsave(joinpath(path, "MCM", string(uuid4())*".jld2"); data_mcm)
+        jldsave(joinpath(path, "SSA", string(uuid4())*".jld2"); data_ssa)
+        t = round(t, digits=3)
         println("Block $n created, elapsed $t seconds")
     end
 end
