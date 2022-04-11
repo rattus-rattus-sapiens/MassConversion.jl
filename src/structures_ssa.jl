@@ -29,7 +29,7 @@ struct SSAmodel{F,S1,S2} <: AbstractModel
 
         # typecast
         D_init = SVector{n_spec,Int64}(D_init)
-        λ_reac = SVector{n_spec,Float64}(λ_reac)
+        λ_reac = SVector{n_reac,Float64}(λ_reac)
 
         new{typeof(calc_prop),n_spec,n_reac}(
             t_start, t_step, t_final, t_len, n_spec, D_init, n_reac, R_mat, λ_reac, calc_prop
@@ -63,7 +63,7 @@ struct SSAdata
 
     # Constructors
     SSAdata(raw::SSAraw) = new(raw.D' ./ raw.n, raw.n)
-    SSAdata(D::Array{Int64,2}, n::Int64) = new(D' ./ n, n)
+    SSAdata(D::Array{Float64,2}, n::Int64) = new(D, n)
 end
 
 Base.zero(::Type{SSAdata}) = SSAdata(zeros(Float64, 0, 0), 0)
@@ -79,6 +79,7 @@ function +(data1::SSAdata, data2::SSAdata)
         n1 = data1.n
         n2 = data2.n
         n3 = n1 + n2
+        D = similar(data1.D)
         @. D = (data1.D * n1 + data2.D * n2) / n3
         return SSAdata(D, n3)
     end
@@ -91,6 +92,7 @@ function +(data::SSAdata, raw::SSAraw)
         n1 = data.n
         n2 = raw.n
         n3 = n1 + n2
+        D = similar(data.D)
         @. D = (data.D * n1 + raw.D') / n3
         return SSAdata(D, n3)
     end

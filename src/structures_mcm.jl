@@ -64,23 +64,25 @@ struct MCMmodel{F,G,S1,S2,S3} <: AbstractModel
     end
 end
 
-# ! --- MCM Output Type ---
-mutable struct MCMraw
+get_t_range(M::MCMmodel) = M.t_start : M.t_step : M.t_final
+
+# ! --- MCM Raw Data Type ---
+"""
+    MCMraw{T}
+
+This function is for things
+"""
+mutable struct MCMraw{T}
     D::Array{Int64,2}
     C::Array{Float64,2}
+    t_range::T
     n::Int64
     function MCMraw(M::MCMmodel)
         D = zeros(Float64, M.n_spec, M.t_len)
         C = zeros(Float64, M.n_spec, M.t_len)
-        new(D, C, 0)
+        tr = get_t_range(M)
+        new{typeof(tr)}(D, C, tr, 0)
     end
-    function MCMraw(D::Array{Int64,2}, C::Array{Float64,2}, n::Int64)
-        new(D, C, n)
-    end
-end
-
-function +(model1::MCMraw, model2::MCMraw)
-    MCMraw(model1.D .+ model2.D, model1.C .+ model2.C, model1.n + model2.n)
 end
 
 @inline function record!(out::MCMraw, D, C, ti)
@@ -91,45 +93,35 @@ end
 end
 
 # ! --- MCM Data Type ---
-struct MCMdata
+struct MCMdata{T}
     D::Array{Float64,2}
     C::Array{Float64,2}
+    t_range::T
     n::Int64
-    function MCMdata(M::MCMraw)
-        new(M.D' ./ M.n, M.C' ./ M.n, M.n)
+    function MCMdata(R::MCMraw)
+        tr = R.t_range
+        new{typeof(tr)}(R.D' ./ R.n, R.C' ./ R.n, tr, R.n)
     end
-    function MCMdata(D, C, n)
-        new(D, C, n)
-    end
+    MCMdata(D, C, tr, n) = new{typeof(tr)}(D, C, tr, n)
 end
 
-Base.zero(::Type{MCMdata}) = MCMdata(zeros(Float64, 0, 0), zeros(Float64, 0, 0), 0)
+Base.zero(::Type{MCMdata}) = MCMdata(zeros(Float64, 0, 0), zeros(Float64, 0, 0), 0.0:0.1:0.0, 0)
 Base.iszero(data::MCMdata) = isempty(data.D) || isempty(data.C)
 
-function +(data1::MCMdata, data2::MCMdata)
-    if iszero(data1)
-        return data2
-    elseif iszero(data2)
-        return data1
+function +(d1::MCMdata, d2::MCMdata)
+    if iszero(d1)
+        return d2
+    elseif iszero(d2)
+        return d1
     else
-        n1 = data1.n
-        n2 = data2.n
-        n3 = data1.n + data2.n
-        @. D = (data1.D * n1 + data2.D * n2) / n3
-        @. C = (data1.C * n1 + data2.C * n2) / n3
-        return MCMdata(D, C, n3)
-    end
-end
-
-function +(data::MCMdata, raw::MCMraw)
-    if iszero(data)
-        return MCMdata(raw.D' ./ raw.n, raw.C' ./ raw.n, raw.n)
-    else
-        n1 = data.n
-        n2 = raw.n
-        n3 = n1 + n2
-        @. D = (data.D * n1 + raw.D') / n3
-        @. C = (data.C * n1 + raw.C') / n3
-        return MCMdata(D, C, n3)
+        D = similar(d1.D)
+        C = similar(d1.C)
+        n1 = d1.n
+        n2 = d2.n
+        n3 = d1.n + d2.n
+        @. D = (d1.D * n1 + d2.D * n2) / n3
+        @. C = (d1.C * n1 + d2.C * n2) / n3
+        tr = d1.t_range
+        return MCMdata(D, C, tr, n3)
     end
 end
