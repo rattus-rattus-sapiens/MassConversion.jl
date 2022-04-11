@@ -1,11 +1,3 @@
-abstract type AbstractModel end
-
-# TODO: Implement interface with some kind of Gillespie package (DiffEqs possible?)
-struct SSAModel <: AbstractModel end
-
-# TODO: Implement interface with DiffEqs.jl
-struct ODEModel <: AbstractModel end
-
 # ! --- MCM Model Type ---
 struct MCMmodel{F,G,S1,S2,S3} <: AbstractModel
     t_start::Float64
@@ -33,13 +25,14 @@ struct MCMmodel{F,G,S1,S2,S3} <: AbstractModel
         R_mat::Matrix{Int64},
         θ::Vector{Tuple{T4,T4}},
         calc_prop::Function,
-        calc_dxdt::Function) where {T1<:Real,T2<:Real,T3<:Real,T4<:Real}
+        calc_dxdt::Function
+    ) where {T1<:Real,T2<:Real,T3<:Real,T4<:Real}
 
         # get derived params
         t_start = Float64(t_span.ref)
         t_step = Float64(t_span.step)
         t_len = t_span.len
-        t_final = t_start + t_step * (t_len-1)
+        t_final = t_start + t_step * (t_len - 1)
         n_spec = length(D_init)
         n_reac = size(R_mat, 2)
 
@@ -81,16 +74,14 @@ mutable struct MCMraw
         C = zeros(Float64, M.n_spec, M.t_len)
         new(D, C, 0)
     end
-    function MCMraw(D::Array{Int64, 2}, C::Array{Float64, 2}, n::Int64)
-        new(D,C,n)
+    function MCMraw(D::Array{Int64,2}, C::Array{Float64,2}, n::Int64)
+        new(D, C, n)
     end
 end
 
 function +(model1::MCMraw, model2::MCMraw)
-    MCMraw(model1.D .+ model2.D, model1.C .+ model2.C, model1.n + model2.n) 
+    MCMraw(model1.D .+ model2.D, model1.C .+ model2.C, model1.n + model2.n)
 end
-
-function +(::AbstractArray, model::MCMraw) model end
 
 @inline function record!(out::MCMraw, D, C, ti)
     @inbounds @simd for k in 1:length(D)
@@ -101,19 +92,21 @@ end
 
 # ! --- MCM Data Type ---
 struct MCMdata
-    D::Array{Float64, 2}
-    C::Array{Float64, 2}
+    D::Array{Float64,2}
+    C::Array{Float64,2}
     n::Int64
     function MCMdata(M::MCMraw)
-        new(M.D'./M.n, M.C'./M.n, M.n)
+        new(M.D' ./ M.n, M.C' ./ M.n, M.n)
     end
-    function MCMdata(D,C,n) new(D,C,n) end
+    function MCMdata(D, C, n)
+        new(D, C, n)
+    end
 end
 
 Base.zero(::Type{MCMdata}) = MCMdata(zeros(Float64, 0, 0), zeros(Float64, 0, 0), 0)
 Base.iszero(data::MCMdata) = isempty(data.D) || isempty(data.C)
 
-function +(data1::MCMdata, data2::MCMdata) 
+function +(data1::MCMdata, data2::MCMdata)
     if iszero(data1)
         return data2
     elseif iszero(data2)
@@ -122,21 +115,21 @@ function +(data1::MCMdata, data2::MCMdata)
         n1 = data1.n
         n2 = data2.n
         n3 = data1.n + data2.n
-        @. D = (data1.D * n1 + data2.D * n2)/n3
-        @. C = (data1.C * n1 + data2.C * n2)/n3
-        return MCMdata(D,C,n3)
+        @. D = (data1.D * n1 + data2.D * n2) / n3
+        @. C = (data1.C * n1 + data2.C * n2) / n3
+        return MCMdata(D, C, n3)
     end
 end
 
 function +(data::MCMdata, raw::MCMraw)
     if iszero(data)
-        return MCMdata(raw.D'./raw.n, raw.C'./raw.n, raw.n)
+        return MCMdata(raw.D' ./ raw.n, raw.C' ./ raw.n, raw.n)
     else
-        n1 = data.n 
-        n2 = raw.n 
+        n1 = data.n
+        n2 = raw.n
         n3 = n1 + n2
-        @. D = (data.D * n1 + raw.D')/n3
-        @. C = (data.C * n1 + raw.C')/n3
-        return MCMdata(D,C,n3)
+        @. D = (data.D * n1 + raw.D') / n3
+        @. C = (data.C * n1 + raw.C') / n3
+        return MCMdata(D, C, n3)
     end
 end
