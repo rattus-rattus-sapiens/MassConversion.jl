@@ -19,20 +19,30 @@ function main(repno, blocksize)
     t_span = 0.0:5e-4:10
     D_mcm = [0]
     C_mcm = [1000]
-    λ_reac = [1e0, 0.0]
+    λ_reac = [1e0, 2e2]
     λ_tran = 1.0
     R_mcm = [
-        -1 0
+        -1 1
         0 0
     ]
     θ = [(250, 250)]
 
     @inline function dxdt_mcm(dxdt, D, C, t, L)
-        dxdt[1] = -L[1] * C[1]
+        if 2.5 ≤ t ≤ 7.5
+            dxdt[1] = 0
+        else
+            dxdt[1] = -L[1] * C[1]
+        end
     end
 
     @inline function prop_mcm(a, D, C, t, L)
-        a[1] = L[1] * D[1]
+        if 2.5 ≤ t ≤ 7.5
+            a[1] = 0.0
+            a[2] = L[2]
+        else
+            a[1] = L[1] * D[1]
+            a[2] = 0.0
+        end
     end
 
     mcm_model = MCMmodel(t_span, D_mcm, C_mcm, λ_reac, λ_tran, R_mcm, θ, prop_mcm, dxdt_mcm)
@@ -40,10 +50,16 @@ function main(repno, blocksize)
     D_ssa = [1000]
     R_ssa = Matrix{Int64}(undef, 1, 2)
     R_ssa[1] = -1
-    R_ssa[2] = 0
+    R_ssa[2] = 1
 
     @inline function prop_ssa(a, D, t, L)
-        a[1] = L[1] * D[1]
+        if 2.5 ≤ t ≤ 7.5
+            a[1] = 0.0
+            a[2] = L[2]
+        else
+            a[1] = L[1] * D[1]
+            a[2] = 0
+        end
     end
 
     ssa_model = SSAmodel(t_span, D_ssa, λ_reac, R_ssa, prop_ssa)
