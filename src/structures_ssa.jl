@@ -37,18 +37,19 @@ struct SSAmodel{F,S1,S2} <: AbstractModel
     end
 end
 
+get_t_range(S::SSAmodel) = S.t_start:S.t_step:S.t_final
+
 # ! ----- SSA Raw Data Type -----
-mutable struct SSAraw
+mutable struct SSAraw{T}
     D::Array{Int64,2}
     n::Int64
-
+    t_range::T
     # Constructors
-    SSAraw(model::SSAmodel) = new(zeros(Int64, model.n_spec, model.t_len), 0)
-    SSAraw(D::Array{Int64,2}, n::Int64) = new(D, n)
+    function SSAraw(S::SSAmodel) 
+        tr = get_t_range(S)
+        new{typeof(tr)}(zeros(Int64, S.n_spec, S.t_len), 0, tr)
+    end
 end
-
-# ? --- SSA Raw Data Functions ---
-+(raw1::SSAraw, raw2::SSAraw) = SSAraw(raw1.D .+ raw2.D, raw1.n + raw2.n)
 
 @inline function record!(raw::SSAraw, D, ti)
     @inbounds @simd for k in 1:length(D)
@@ -57,43 +58,33 @@ end
 end
 
 # ! ----- SSA Actual Data Type -----
-struct SSAdata
+struct SSAdata{T}
     D::Array{Float64,2}
     n::Int64
-
+    t_range::T
     # Constructors
-    SSAdata(raw::SSAraw) = new(raw.D' ./ raw.n, raw.n)
-    SSAdata(D::Array{Float64,2}, n::Int64) = new(D, n)
+    function SSAdata(raw::SSAraw)
+        tr = raw.t_range
+        new{typeof(tr)}(raw.D' ./ raw.n, raw.n, raw.t_range)
+    end
+    SSAdata(D::Array{Float64,2}, n::Int64, tr) = new{typeof(tr)}(D, n, tr)
 end
 
-Base.zero(::Type{SSAdata}) = SSAdata(zeros(Float64, 0, 0), 0)
+Base.zero(::Type{SSAdata}) = SSAdata(zeros(Float64, 0, 0), 0, 0:0.1:0)
 Base.iszero(data::SSAdata) = isempty(data.D)
 
 # ? --- SSA Actual Data functions ---
-function +(data1::SSAdata, data2::SSAdata)
-    if iszero(data1)
-        return data2
-    elseif iszero(data2)
-        return data1
+function +(d1::SSAdata, d2::SSAdata)
+    if iszero(d1)
+        return d2
+    elseif iszero(d2)
+        return d1
     else
-        n1 = data1.n
-        n2 = data2.n
+        n1 = d1.n
+        n2 = d2.n
         n3 = n1 + n2
-        D = similar(data1.D)
-        @. D = (data1.D * n1 + data2.D * n2) / n3
-        return SSAdata(D, n3)
-    end
-end
-
-function +(data::SSAdata, raw::SSAraw)
-    if iszero(data)
-        return SSAdata(raw.D' ./ raw.n, raw.n)
-    else
-        n1 = data.n
-        n2 = raw.n
-        n3 = n1 + n2
-        D = similar(data.D)
-        @. D = (data.D * n1 + raw.D') / n3
-        return SSAdata(D, n3)
+        D = similar(d1.D)
+        @. D = (d1.D * n1 + d2.D * n2) / n3
+        return SSAdata(D, n3, d1.t_range)
     end
 end
