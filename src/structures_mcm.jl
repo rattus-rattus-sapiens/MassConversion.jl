@@ -93,7 +93,7 @@ end
 end
 
 # ! --- MCM Data Type ---
-struct MCMdata{T}
+struct MCMdata{T} <: AbstractData
     D::Array{Float64,2}
     C::Array{Float64,2}
     t_range::T
@@ -105,9 +105,14 @@ struct MCMdata{T}
     MCMdata(D, C, tr, n) = new{typeof(tr)}(D, C, tr, n)
 end
 
+# * --- Getters ---
+get_discrete(M::MCMdata) = M.D;
+get_continuous(M::MCMdata) = M.C;
+get_total(M::MCMdata) = M.D .+ M.C;
+
+# * --- Overloaded functions ---
 Base.zero(::Type{MCMdata}) = MCMdata(zeros(Float64, 0, 0), zeros(Float64, 0, 0), 0.0:0.1:0.0, 0)
 Base.iszero(data::MCMdata) = isempty(data.D) || isempty(data.C)
-
 function +(d1::MCMdata, d2::MCMdata)
     if iszero(d1)
         return d2

@@ -58,7 +58,7 @@ end
 end
 
 # ! ----- SSA Actual Data Type -----
-struct SSAdata{T}
+struct SSAdata{T} <: AbstractData
     D::Array{Float64,2}
     n::Int64
     t_range::T

@@ -1,22 +1,23 @@
 module MassConversion
-import Base.+, Base.adjoint
 using ArgParse
 using StaticArrays
 using Dates
 using UUIDs
 using JLD2
 
-# overloading plot here - don't worry - no type piracy!
+# Base overloads
+import Base.+, Base.adjoint, Base.length
+
+# Plots overloads
 using Plots
 import Plots.plot
 
 abstract type AbstractModel end
-
+abstract type AbstractData end
 include("structures_mcm.jl")
-export MCMmodel
-
 include("structures_ssa.jl")
-export SSAmodel
+include("structures_err.jl")
+export MCMmodel, SSAmodel, MCMdata, SSAdata, RelativeError, rep_no
 
 include("simulate.jl")
 export par_run_sim
