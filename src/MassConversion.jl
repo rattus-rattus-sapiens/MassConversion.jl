@@ -14,6 +14,7 @@ import Plots.plot
 
 abstract type AbstractModel end
 abstract type AbstractData end
+abstract type AbstractError end
 include("structures_mcm.jl")
 include("structures_ssa.jl")
 include("structures_err.jl")

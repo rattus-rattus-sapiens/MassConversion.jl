@@ -1,5 +1,5 @@
 # ----- Error Type -----
-struct RelativeError{N,T,D1,D2}
+struct RelativeError{N,T,D1,D2} <: AbstractError
     true_soln::NTuple{N,D1}
     test_soln::NTuple{N,D2}
     t_range::T
