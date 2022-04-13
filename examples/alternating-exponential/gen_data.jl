@@ -1,5 +1,6 @@
 using MassConversion
 using ArgParse
+using Dates
 
 function parse_commandline()
     s = ArgParseSettings()
@@ -11,12 +12,16 @@ function parse_commandline()
         "--blocksize", "-b"
         help = "Number of repeats per save datafile"
         arg_type = Int
+        "--dir_name", "-d"
+        help = "Name of saved data directory"
+        arg_type = String
+        default = Dates.format(now(), "e-dd-HH:MM:SS")
     end
     return parse_args(s)
 end
 
-function main(repno, blocksize)
-    t_span = 0.0:5e-4:10
+function main(repno, blocksize, dir_name)
+    t_span = 0.0:1e-2:10
     D_mcm = [0]
     C_mcm = [1000]
     λ_reac = [1e0, 2e2]
@@ -25,7 +30,7 @@ function main(repno, blocksize)
         -1 1
         0 0
     ]
-    θ = [(250, 250)]
+    θ = [(0, 0)]
 
     @inline function dxdt_mcm(dxdt, D, C, t, L)
         if 2.5 ≤ t ≤ 7.5
@@ -65,11 +70,12 @@ function main(repno, blocksize)
     ssa_model = SSAmodel(t_span, D_ssa, λ_reac, R_ssa, prop_ssa)
 
     println("Number of threads ", Threads.nthreads())
-    par_run_sim(mcm_model, ssa_model, repno, blocksize)
+    par_run_sim(mcm_model, ssa_model, repno, blocksize; dir_name=dir_name)
 end;
 
 parsed_args = parse_commandline()
 repno = parsed_args["repno"]
 blocksize = parsed_args["blocksize"]
+dir = parsed_args["dir_name"]
 
-main(repno, blocksize)
+main(repno, blocksize, dir)
