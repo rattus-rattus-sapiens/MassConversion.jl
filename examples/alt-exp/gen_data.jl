@@ -1,24 +1,4 @@
 using MassConversion
-using ArgParse
-using Dates
-
-function parse_commandline()
-    s = ArgParseSettings()
-
-    @add_arg_table s begin
-        "--repno", "-r"
-        help = "Number of repeats to simulate"
-        arg_type = Int
-        "--blocksize", "-b"
-        help = "Number of repeats per save datafile"
-        arg_type = Int
-        "--dir_name", "-d"
-        help = "Name of saved data directory"
-        arg_type = String
-        default = Dates.format(now(), "e-dd-HH:MM:SS")
-    end
-    return parse_args(s)
-end
 
 function main(repno, blocksize, dir_name)
     t_span = 0.0:1e-2:10
@@ -73,5 +53,5 @@ function main(repno, blocksize, dir_name)
     par_run_sim(mcm_model, ssa_model, repno, blocksize; dir_name=dir_name)
 end
 
-args = parse_commandline()
+args = parse_cmd()
 main(args["repno"], args["blocksize"], args["dir_name"])

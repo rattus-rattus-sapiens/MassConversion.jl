@@ -24,7 +24,7 @@ include("simulate.jl")
 export par_run_sim
 
 include("data_io.jl")
-export load_raw, load_ensemble
+export load_raw, parse_cmd
 
 include("plotting.jl")
 export plot
