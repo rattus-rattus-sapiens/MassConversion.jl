@@ -71,11 +71,7 @@ function main(repno, blocksize, dir_name)
 
     println("Number of threads ", Threads.nthreads())
     par_run_sim(mcm_model, ssa_model, repno, blocksize; dir_name=dir_name)
-end;
+end
 
-parsed_args = parse_commandline()
-repno = parsed_args["repno"]
-blocksize = parsed_args["blocksize"]
-dir = parsed_args["dir_name"]
-
-main(repno, blocksize, dir)
+args = parse_commandline()
+main(args["repno"], args["blocksize"], args["dir_name"])
