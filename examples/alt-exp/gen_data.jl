@@ -1,4 +1,5 @@
 using MassConversion
+using ArgParse
 
 function gen_ssa_data(repno, blocksize, dir_name)
     println("Beginning SSA simulation")
