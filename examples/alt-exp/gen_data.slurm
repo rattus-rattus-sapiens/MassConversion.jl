@@ -5,4 +5,4 @@
 #SBATCH --error=runsim.err 
 #SBATCH --time=06:00:00
 
-julia alternating-exponential.jl -r $1 -b $2 
+julia gen_data.jl -r $1 -b $2 
