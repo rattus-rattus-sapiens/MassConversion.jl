@@ -186,7 +186,7 @@ function par_run_sim(
 
     Threads.@threads for n in 1:n_blocks
         t = @elapsed data = _sim_block(model, blocksize)
-        jldsave(joinpath(path, string(uuid4()) * ".jld2"); data_mcm=data)
+        jldsave(joinpath(path, string(uuid4()) * ".jld2"); data=data)
         t = round(t, digits=5)
         println("Block $n created, elapsed $t seconds")
     end
