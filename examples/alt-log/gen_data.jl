@@ -50,7 +50,7 @@ function gen_mcm_data(repno, blocksize, dir_name)
     D_init = [0]
     C_init = [1000]
     λ_reac = [1e0, 2e2]
-    λ_tran = 1.0e1
+    λ_tran = 1.0
     R_mcm = [
         -1 1
         0 0
