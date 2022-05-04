@@ -16,7 +16,6 @@ end
     elseif direc == -1
         if C[idx] < 1
             if rand() < C[idx]
-                println("AAA")
                 D[idx] += 1
                 C[idx] = 0
             end
