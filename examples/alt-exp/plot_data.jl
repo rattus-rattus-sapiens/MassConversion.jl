@@ -2,22 +2,14 @@ using Revise
 using Plots
 using MassConversion
 
-_, ssa = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/ssa-solution");
-ode, _ = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/ode-solution");
-mcm, _ = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/mcm-solution");
+ode, _ = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/r01-ode/");
+mcm, _ = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/r01-mcm/");
 
-ssa_full = sum(ssa);
 ode_full = ode[1];
 mcm_full = sum(mcm);
 
 plot(ode_full)
-plot(ssa_full)
 plot(mcm_full)
-
-err_ode = RelativeError(ode_full, ssa_full)
-err_mcm = RelativeError(mcm_full, ssa_full)
-p = plot(err_ode)
-plot(p, err_mcm)
 
 function f(t)
     if t ≤ 0
@@ -31,9 +23,16 @@ function f(t)
     end
 end
 
-gt = data_ssa_full.D
-pt = data_mcm_full.D .+ data_mcm_full.C 
+t = ssa_full.t_range
+ode_dat = ode_full.C
+mcm_dat = mcm_full.D .+ mcm_full.C
+tru_dat = f.(t)
 
-rel_err = (pt .- gt) ./ gt
+rel_err_ode = (ode_dat .- tru_dat) ./ tru_dat
+rel_err_mcm = (mcm_dat .- tru_dat) ./ tru_dat
 
-plot(rel_err)
+n1 = sum(abs.(rel_err_mcm))
+n2 = sum(abs.(rel_err_ode))
+
+plot(rel_err_ode)
+plot!(rel_err_mcm)

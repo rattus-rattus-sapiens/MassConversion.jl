@@ -1,25 +1,5 @@
 using MassConversion
 
-function gen_ssa_data(repno, blocksize, dir_name)
-    println("Beginning SSA simulation")
-    t_span = 0.0:1e-3:10.0
-    D_init = [1000]
-    λ_reac = [1e0, 2e2]
-    R_mat = [-1 1]
-    
-    @inline function calc_prop(a, D, t, L)
-        if 2.5 ≤ t ≤ 7.5
-            a[1] = 0.0
-            a[2] = L[2]
-        else
-            a[1] = L[1]*D[1]
-            a[2] = 0
-        end
-    end
-    model = SSAmodel(t_span, D_init, λ_reac, R_mat, calc_prop)
-    par_run_sim(model, repno, blocksize; dir_name=dir_name)
-end
-
 function gen_ode_data(repno, blocksize, dir_name)
     println("Beginning ODE simulation")
     t_span = 0.0:1e-3:10.0
@@ -50,7 +30,7 @@ function gen_mcm_data(repno, blocksize, dir_name)
     D_init = [0]
     C_init = [1000]
     λ_reac = [1e0, 2e2]
-    λ_tran = 1.0e1
+    λ_tran = 1.0e-1
     R_mcm = [
         -1 1
         0 0
@@ -77,6 +57,5 @@ function gen_mcm_data(repno, blocksize, dir_name)
 end
 
 args = parse_cmd()
-#gen_ssa_data(args["repno"], args["blocksize"], "ssa-solution")
-gen_ode_data(args["repno"], args["blocksize"], joinpath(args["dir_name"], "ode-solution"))
-gen_mcm_data(args["repno"], args["blocksize"], joinpath(args["dir_name"], "mcm-solution"))
+gen_ode_data(args["repno"], args["blocksize"], args["dir_name"]*"-ode")
+gen_mcm_data(args["repno"], args["blocksize"], args["dir_name"]*"-mcm")
