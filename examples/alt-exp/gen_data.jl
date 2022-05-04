@@ -78,5 +78,5 @@ end
 
 args = parse_cmd()
 #gen_ssa_data(args["repno"], args["blocksize"], "ssa-solution")
-gen_ode_data(args["repno"], args["blocksize"], "ode-solution")
-gen_mcm_data(args["repno"], args["blocksize"], "mcm-solution")
+gen_ode_data(args["repno"], args["blocksize"], joinpath(args["dir_name"], "ode-solution"))
+gen_mcm_data(args["repno"], args["blocksize"], joinpath(args["dir_name"], "mcm-solution"))
