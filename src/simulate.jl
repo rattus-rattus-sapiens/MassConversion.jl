@@ -99,8 +99,7 @@ end
                 rid = sample_dist(a, a0)
                 execute_reaction!(D, C, model, rid)
             else
-                calc_dxdt(dxdt, D, C, t, model.λ_reac)
-                @. C += model.t_step * dxdt
+                calc_dxdt(dxdt, D, C, t, model.t_step, model.λ_reac)
 
                 # record
                 ti += 1

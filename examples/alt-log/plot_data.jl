@@ -22,7 +22,7 @@ plot(p, err_mcm)
 function f(t)
     if t ≤ 0
         1000.0
-    elseif 0 < t ≤ 2.5
+    elseif 0 < t ≤ 5.5
         1000.0*exp(-t)
     elseif t > 15/2
         1082.0849986238989 * exp(-t+7.5)

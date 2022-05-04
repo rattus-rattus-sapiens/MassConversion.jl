@@ -2,8 +2,8 @@ using Revise
 using Plots
 using MassConversion
 
-ode_dir = "yes-thresh-ode";
-mcm_dir = "yes-thresh-mcm";
+ode_dir = "validate-ode";
+mcm_dir = "validate-mcm";
 
 ode = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", ode_dir));
 mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", mcm_dir));
@@ -37,5 +37,6 @@ rel_err_mcm = (mcm_dat .- tru_dat) ./ tru_dat;
 n1 = sum(abs.(rel_err_mcm))
 n2 = sum(abs.(rel_err_ode))
 
-plot(rel_err_ode)
-plot!(rel_err_mcm)
+plot(t, rel_err_ode)
+plot!(t, rel_err_mcm)
+vline!([2])
