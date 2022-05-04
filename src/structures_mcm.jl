@@ -113,6 +113,7 @@ get_total(M::MCMdata) = M.D .+ M.C;
 # * --- Overloaded functions ---
 Base.zero(::Type{MCMdata}) = MCMdata(zeros(Float64, 0, 0), zeros(Float64, 0, 0), 0.0:0.1:0.0, 0)
 Base.iszero(data::MCMdata) = isempty(data.D) || isempty(data.C)
++(d::MCMdata) = d
 function +(d1::MCMdata, d2::MCMdata)
     if iszero(d1)
         return d2

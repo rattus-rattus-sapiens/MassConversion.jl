@@ -1,18 +1,8 @@
 function load_raw(dataloc::String)
     path = joinpath(pwd(), dataloc)
     dircontents = readdir(path)
-    mcm_data = nothing
-    ssa_data = nothing
-    if "MCM" ∈ dircontents
-        files = readdir("$path/MCM", join=true)
-        mcm_data = Tuple(MCMdata(load(file, "data")) for file in files)
-    end
-    if "SSA" ∈ dircontents
-        files = readdir("$path/SSA", join=true)
-        ssa_data = Tuple(SSAdata(load(file, "data")) for file in files)
-    end
-    println("Loaded")
-    return mcm_data, ssa_data
+    files = readdir(path, join=true)
+    data = Tuple(load(file, "data") for file in files)
 end
 
 function parse_cmd()

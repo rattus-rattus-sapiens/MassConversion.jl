@@ -16,6 +16,7 @@ end
     elseif direc == -1
         if C[idx] < 1
             if rand() < C[idx]
+                println("AAA")
                 D[idx] += 1
                 C[idx] = 0
             end
@@ -33,8 +34,7 @@ end
     D::AbstractVector{Int64},
     C::AbstractVector{Float64},
     θ::AbstractVector{Tuple{Float64,Float64}},
-    L::AbstractVector{Float64}
-)
+    L::AbstractVector{Float64})
     @inbounds for (i, pair) in enumerate(θ)
         fwd[i] = L[i] * D[i] * (D[i] + C[i] > pair[2])
         bwd[i] = L[i] * C[i] * (D[i] + C[i] < pair[1])
@@ -167,14 +167,13 @@ function par_run_sim(
     model::M,
     rep_no::Int64,
     blocksize::Int64;
-    dir_name::String=Dates.format(now(), "e-dd-HH:MM:SS")
-) where {M<:AbstractModel}
+    dir_name::String=Dates.format(now(), "e-dd-HH:MM:SS")) where {M<:AbstractModel}
 
     num_mbs = round((8 * 2 * model.n_spec * model.t_len * rep_no / blocksize) / (1024^2), digits=3)
     n_blocks::Int64 = rep_no / blocksize
 
     # setup saving directory
-    path = joinpath("dat", dir_name, string(M)[1:3])
+    path = joinpath("dat", dir_name)
     if num_mbs > 100
         throw("disc usage will exceed 100 MiBs - estimated $num_mbs MiBs")
     else
@@ -183,46 +182,16 @@ function par_run_sim(
         mkpath(path)
     end
 
+    if M <: MCMmodel
+        O = MCMdata
+    elseif M <: SSAmodel
+        O = SSAdata
+    end
 
     Threads.@threads for n in 1:n_blocks
         t = @elapsed data = _sim_block(model, blocksize)
-        jldsave(joinpath(path, string(uuid4()) * ".jld2"); data=data)
+        jldsave(joinpath(path, string(uuid4()) * ".jld2"); data=O(data))
         t = round(t, digits=5)
-        println("Block $n created, elapsed $t seconds")
-    end
-end
-
-par_run_sim(ssa::SSAmodel, mcm::MCMmodel, rep_no, blocksize; dir_name) = par_run_sim(mcm, ssa, rep_no, blocksize; dir_name)
-
-function par_run_sim(
-    mcm::MCMmodel,
-    ssa::SSAmodel,
-    rep_no::Int64,
-    blocksize::Int64;
-    dir_name::String=Dates.format(now(), "e-dd-HH:MM:SS")
-)
-
-    n_blocks = rep_no ÷ blocksize
-    n_mibs_mcm = (8 * 2 * mcm.n_spec * mcm.t_len * n_blocks) / (1024^2)
-    n_mibs_ssa = (8 * ssa.n_spec * ssa.t_len * n_blocks) / (1024^2)
-    n_mibs = round(n_mibs_mcm + n_mibs_ssa, digits=3)
-
-    # setup data directory
-    path = joinpath("dat", dir_name)
-    if n_mibs > 100
-        throw("disc usage will exceed 100 MiBs - estimated $n_mibs")
-    else
-        println("Estimated disc usage $n_mibs MiBs. $n_blocks blocks. \nSaving to $path:\n")
-        mkpath(joinpath(path, "MCM"))
-        mkpath(joinpath(path, "SSA"))
-    end
-
-    Threads.@threads for n in 1:n_blocks
-        t = @elapsed data_mcm = _sim_block(mcm, blocksize)
-        t += @elapsed data_ssa = _sim_block(ssa, blocksize)
-        jldsave(joinpath(path, "MCM", string(uuid4()) * ".jld2"); data_mcm)
-        jldsave(joinpath(path, "SSA", string(uuid4()) * ".jld2"); data_ssa)
-        t = round(t, digits=3)
         println("Block $n created, elapsed $t seconds")
     end
 end
