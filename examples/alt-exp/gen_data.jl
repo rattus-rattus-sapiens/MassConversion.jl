@@ -77,6 +77,6 @@ function gen_mcm_data(repno, blocksize, dir_name)
 end
 
 args = parse_cmd()
-gen_ssa_data(args["repno"], args["blocksize"], "ssa-solution")
+#gen_ssa_data(args["repno"], args["blocksize"], "ssa-solution")
 gen_ode_data(args["repno"], args["blocksize"], "ode-solution")
 gen_mcm_data(args["repno"], args["blocksize"], "mcm-solution")
