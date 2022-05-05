@@ -1,23 +1,23 @@
 using Revise
 using Plots
 using MassConversion
+pgfplotsx()
 
-ode_dir = "validate-ode";
-mcm_dir = "validate-mcm";
+dir = "meeting";
 
-ode = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", ode_dir));
-mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", mcm_dir));
+ode = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", dir*"-ode"));
+mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", dir*"-mcm"));
 
 ode_full = sum(ode);
 mcm_full = sum(mcm);
 
-plot(ode_full)
-plot(mcm_full)
+p = plot(dpi=600)
+plot(p,mcm_full)
 
 function f(t)
     if t ≤ 0
         1000.0
-    elseif 0 < t ≤ 5.5
+    elseif 0 < t ≤ 2.5
         1000.0*exp(-t)
     elseif t ≥ 15/2
         1082.0849986238989 * exp(-t+7.5)
@@ -31,12 +31,13 @@ ode_dat = ode_full.C;
 mcm_dat = mcm_full.D .+ mcm_full.C;
 tru_dat = f.(t);
 
-rel_err_ode = (ode_dat .- tru_dat) ./ tru_dat;
-rel_err_mcm = (mcm_dat .- tru_dat) ./ tru_dat;
+rel_err_ode = ((ode_dat .- tru_dat) ./ tru_dat);
+rel_err_mcm = ((mcm_dat .- tru_dat) ./ tru_dat);
 
 n1 = sum(abs.(rel_err_mcm))
 n2 = sum(abs.(rel_err_ode))
 
-plot(t, rel_err_ode)
-plot!(t, rel_err_mcm)
-vline!([2])
+p = plot(t, rel_err_ode;label="ode",dpi=600);
+plot!(p, t, rel_err_mcm;label="mcm");
+p
+vline!([1.38])
