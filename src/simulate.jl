@@ -18,6 +18,8 @@ end
             if rand() < C[idx]
                 D[idx] += 1
                 C[idx] = 0
+            else
+                C[idx] = 0
             end
         else
             D[idx] += 1
