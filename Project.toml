@@ -15,6 +15,7 @@ UUIDs = "cf7118a7-6976-5b1a-9a39-7adc72f591a4"
 
 [compat]
 DocumenterTools = "0.1"
+PGFPlotsX = "1"
 Plots = "1"
 julia = "1"
 
