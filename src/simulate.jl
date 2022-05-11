@@ -37,8 +37,8 @@ end
     θ::AbstractVector{Tuple{Float64,Float64}},
     L::AbstractVector{Float64})
     @inbounds for (i, pair) in enumerate(θ)
-        fwd[i] = L[i] * D[i] * (D[i] + C[i] > pair[2])
-        bwd[i] = L[i] * C[i] * (D[i] + C[i] < pair[1])
+        fwd[i] = L[i] * D[i] * (D[i] + C[i] ≥ pair[2])
+        bwd[i] = L[i] * C[i] * (D[i] + C[i] ≤ pair[1])
     end
     return nothing
 end
@@ -62,11 +62,18 @@ end
     end
 end
 
+@inline function ode_step(f, t, C, h)
+    k1 = f(t, C)
+    k2 = f(t + h/2, C .+ h*k1/2)
+    k3 = f(t + h/2, C .+ h*k2/2)
+    k4 = f(t + h, C .+ h*k3)
+    C .+= h*(k1 + 2*k2 + 2*k3 + k4)/6
+end
+
 @inline function _sim_block(model::MCMmodel{F,G,S1,S2,S3}, blocksize::Int64) where {F,G,S1,S2,S3}
     # malloc 
     data = MCMraw(model)
     a = MVector{S2 + S3,Float64}(zeros(Float64, S2 + S3))
-    dxdt = MVector{S1,Float64}(zeros(Float64, S1))
     D = MVector{S1,Int64}(zeros(Int64, S1))
     C = MVector{S1,Float64}(zeros(Float64, S1))
 
@@ -75,7 +82,7 @@ end
     prop_tfwd = view(a, model.n_reac+1:model.n_spec)
     prop_tbwd = view(a, model.n_reac+model.n_spec+1:model.n_reac+2*model.n_spec)
     calc_prop = model.calc_prop
-    calc_dxdt = model.calc_dxdt
+    f = model.calc_dxdt
 
     for _ in 1:blocksize
         # Initial conditions
@@ -89,7 +96,7 @@ end
 
         while t < model.t_final
             # Update propensities
-            calc_prop(prop_reac, D, C, t, model.λ_reac)
+            calc_prop(prop_reac, D, C, model.λ_reac)
             calc_tran(prop_tfwd, prop_tbwd, D, C, model.θ, model.λ_tran)
             a0 = sum(a)
 
@@ -101,7 +108,7 @@ end
                 rid = sample_dist(a, a0)
                 execute_reaction!(D, C, model, rid)
             else
-                calc_dxdt(dxdt, D, C, t, model.t_step, model.λ_reac)
+                ode_step(f,t,C,model.t_step)
 
                 # record
                 ti += 1

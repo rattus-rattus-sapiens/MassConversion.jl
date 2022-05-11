@@ -1,7 +1,7 @@
 name = "MassConversion"
 uuid = "2e54bf2d-ba46-4dd2-9ac8-948a8ef92836"
 authors = ["Joshua C. Kynaston <josh.c.kynaston@gmail.com>"]
-version = "1.4.3"
+version = "1.4.4"
 
 [deps]
 ArgParse = "c7e460c6-2fb9-53a9-8c5b-16f535851c63"
