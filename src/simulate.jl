@@ -62,11 +62,11 @@ end
     end
 end
 
-@inline function ode_step(f, t, C, h)
-    k1 = f(t, C)
-    k2 = f(t + h/2, C .+ h*k1/2)
-    k3 = f(t + h/2, C .+ h*k2/2)
-    k4 = f(t + h, C .+ h*k3)
+@inline function ode_step!(C, k1, k2, k3, k4, f, t, h)
+    f(k1, t, C)
+    f(k2, t + h/2, C .+ h*k1/2)
+    f(k3, t + h/2, C .+ h*k2/2)
+    f(k4, t + h, C .+ h*k3)
     C .+= h*(k1 + 2*k2 + 2*k3 + k4)/6
 end
 
@@ -76,6 +76,10 @@ end
     a = MVector{S2 + S3,Float64}(zeros(Float64, S2 + S3))
     D = MVector{S1,Int64}(zeros(Int64, S1))
     C = MVector{S1,Float64}(zeros(Float64, S1))
+    k1 = similar(C)
+    k2 = similar(C)
+    k3 = similar(C)
+    k4 = similar(C)
 
     # Create views
     prop_reac = view(a, 1:model.n_reac)
@@ -83,6 +87,7 @@ end
     prop_tbwd = view(a, model.n_reac+model.n_spec+1:model.n_reac+2*model.n_spec)
     calc_prop = model.calc_prop
     f = model.calc_dxdt
+    h = model.t_step
 
     for _ in 1:blocksize
         # Initial conditions
@@ -96,7 +101,7 @@ end
 
         while t < model.t_final
             # Update propensities
-            calc_prop(prop_reac, D, C, model.λ_reac)
+            calc_prop(prop_reac, D, C, t, model.λ_reac)
             calc_tran(prop_tfwd, prop_tbwd, D, C, model.θ, model.λ_tran)
             a0 = sum(a)
 
@@ -108,7 +113,7 @@ end
                 rid = sample_dist(a, a0)
                 execute_reaction!(D, C, model, rid)
             else
-                ode_step(f,t,C,model.t_step)
+                ode_step!(C, k1, k2, k3, k4, f, t, h)
 
                 # record
                 ti += 1
