@@ -5,24 +5,20 @@ gr()
 
 dir = "alter";
 
-ode = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", dir*"-ode"));
-mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/", dir*"-mcm"));
+ssa = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-log/dat/", dir*"-ssa"));
+mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-log/dat/", dir*"-mcm"));
 
-ode_full = sum(ode);
+ssa_full = sum(ssa);
 mcm_full = sum(mcm);
 
 p = plot(dpi=600)
 plot(p,mcm_full)
 
-function f(t)
-    if t ≤ 0
-        1000.0
-    elseif 0 < t < 4
-        1000.0*exp(-t)
-    else
-        200*(t-4) + 18.315638888734178
-    end
-end;
+err_full = RelativeError(mcm_full, ssa_full)
+err = RelativeError(mcm, ssa)
+
+plot(err)
+plot(err_full)
 
 t = ode_full.t_range;
 ode_dat = ode_full.C;

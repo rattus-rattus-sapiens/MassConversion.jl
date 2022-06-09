@@ -1,39 +1,25 @@
 using Revise
 using Plots
 using MassConversion
+gr()
 
-_, ssa = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/ssa-solution");
-ode, _ = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/ode-solution");
-mcm, _ = load_raw("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/dat/mcm-solution");
+dir = "alter";
+
+ssa = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-log/dat/", dir*"-ssa"));
+mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-log/dat/", dir*"-mcm"));
+ode = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-log/dat/", dir*"-ode"));
 
 ssa_full = sum(ssa);
-ode_full = ode[1];
 mcm_full = sum(mcm);
+ode_full = sum(ode);
 
-plot(ode_full)
-plot(ssa_full)
-plot(mcm_full)
+p = plot(dpi=600)
+plot(p,mcm_full)
 
-err_ode = RelativeError(ode_full, ssa_full)
-err_mcm = RelativeError(mcm_full, ssa_full)
-p = plot(err_ode)
-plot(p, err_mcm)
+err_full = RelativeError(mcm_full, ssa_full)
+ode_err = RelativeError(ode_full, ssa_full)
 
-function f(t)
-    if t ≤ 0
-        1000.0
-    elseif 0 < t ≤ 5.5
-        1000.0*exp(-t)
-    elseif t > 15/2
-        1082.0849986238989 * exp(-t+7.5)
-    else
-        200*t - 417.9150013761012
-    end
-end
-
-gt = data_ssa_full.D
-pt = data_mcm_full.D .+ data_mcm_full.C 
-
-rel_err = (pt .- gt) ./ gt
-
-plot(rel_err)
+p = plot(dpi=600)
+plot(p, err_full)
+plot(p, ode_err)
+plot(p;legend=("Test", "Eek"))
