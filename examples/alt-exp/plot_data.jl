@@ -1,7 +1,7 @@
 using Revise
 using Plots
 using MassConversion
-gr()
+pgfplotsx()
 
 dir = "alter";
 
@@ -11,8 +11,10 @@ mcm = load_raw(joinpath("/home/jkynaston/git/MassConversion.jl/examples/alt-exp/
 ode_full = sum(ode);
 mcm_full = sum(mcm);
 
-p = plot(dpi=600)
+p = plot(dpi=300)
 plot(p,mcm_full)
+plot!(p, size=(335,200), legend=false, tickfontsize=10)
+plot!(legend=false, tickfontsize=10)
 
 function f(t)
     if t ≤ 0

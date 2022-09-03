@@ -19,6 +19,11 @@ struct RelativeError{N,T,D1,D2} <: AbstractError
         tr = true_soln.t_range
         new{1, typeof(tr), D1, D2}((true_soln,), (test_soln,), tr, error)
     end
+    function RelativeError(t1::D, t2::D) where D<:SSAdata
+        err = ((t1.D .- t2.D)./t1.D)
+        tr = t1.t_range
+        new{1, typeof(tr), D, D}((t1,), (t2,), tr, (err,))
+    end
     RelativeError(tests::Tuple{Vararg{D2}}, trues::Tuple{Vararg{D1}}) where {D1<:SSAdata,D2<:MCMdata} = RelativeError(trues, tests)
     RelativeError(tst::D2, tru::D1) where {D1<:SSAdata, D2<:MCMdata} = RelativeError(tru,tst)
 end

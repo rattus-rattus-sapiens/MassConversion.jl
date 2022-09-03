@@ -87,6 +87,7 @@ args = parse_cmd()
 repno = args["repno"]
 bs = args["blocksize"]
 dir = args["dir_name"]
-gen_ssa_data(repno, bs, dir*"-ssa")
+gen_ssa_data(repno, bs, dir*"-ssa1")
+gen_ssa_data(repno, bs, dir*"-ssa2")
 gen_mcm_data(repno, bs, dir*"-mcm")
 gen_ode_data(dir*"-ode")

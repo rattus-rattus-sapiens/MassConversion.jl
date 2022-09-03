@@ -27,6 +27,6 @@ include("data_io.jl")
 export load_raw, parse_cmd
 
 include("plotting.jl")
-export plot
+export plot, init_plot
 
 end
